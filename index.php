@@ -29,7 +29,7 @@ try {
 
     $bookingSatisfaction = $totalBookings > 0
         ? round(($completedBookings / $totalBookings) * 100)
-        : 98;
+        : 0;
 
     // Verified doctors for the "Meet your care team" section (limit 4)
     $stmt = $db->query("
@@ -53,12 +53,12 @@ try {
 
     $dbOk = true;
 } catch (Throwable $e) {
-    // If DB is unreachable, fall back to placeholder values
+    // If DB is unreachable, set counts to 0
     $dbOk                = false;
-    $totalDoctors        = 1800;
-    $totalHospitals      = 250;
+    $totalDoctors        = 0;
+    $totalHospitals      = 0;
     $totalAppointments   = 0;
-    $bookingSatisfaction = 98;
+    $bookingSatisfaction = 0;
     $featuredDoctors     = [];
     $featuredHospitals   = [];
 }
