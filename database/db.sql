@@ -209,7 +209,7 @@ INSERT INTO users (id, email, password_hash, role, status, force_password_change
 VALUES (
     1,
     'admin@example.com',
-    '$2y$12$p0LKkAa1v7DatkqkvXIK7e04wbF3JjqQjQmfiWyHj7C9B0zSvimKy',
+    '$2y$12$EdJecX7BBhbwggWDimla8OWtYBeJbNRzNYthzFnOUfTZg4BmBw6DS',
     'admin',
     'active',
     FALSE

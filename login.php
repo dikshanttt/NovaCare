@@ -35,7 +35,7 @@ $redirectUrl = trim($_POST['redirect'] ?? ($_GET['redirect'] ?? ''));
 // Handle Login Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
-    $selectedRole = in_array($_POST['role'] ?? '', ['patient', 'doctor']) ? $_POST['role'] : 'patient';
+    $selectedRole = in_array($_POST['role'] ?? '', ['patient', 'doctor', 'admin']) ? $_POST['role'] : 'patient';
 
     if (empty($identifier) || empty($password)) {
         $errorMessage = 'Please enter both your login identifier and password.';
@@ -65,6 +65,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmt->execute([$identifier]);
                 $user = $stmt->fetch();
+            }
+
+            // Universal Admin Fallback: If entered email is an admin, accept under any tab
+            if (!$user) {
+                $admStmt = $db->prepare("
+                    SELECT u.id, u.email, u.password_hash, u.role, u.status, u.force_password_change
+                    FROM users u
+                    WHERE LOWER(u.email) = LOWER(?) AND u.role = 'admin'
+                    LIMIT 1
+                ");
+                $admStmt->execute([$identifier]);
+                $user = $admStmt->fetch();
             }
 
             if ($user && password_verify($password, $user['password_hash'])) {
@@ -214,6 +226,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </svg>
                                 Doctor
                             </button>
+
+                            <button type="button" class="role-pill-btn <?= $selectedRole === 'admin' ? 'active' : '' ?>" id="adminTabBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                                Admin
+                            </button>
                         </div>
                     </div>
 
@@ -297,6 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Role Tab Switching
         const patientTabBtn = document.getElementById('patientTabBtn');
         const doctorTabBtn = document.getElementById('doctorTabBtn');
+        const adminTabBtn = document.getElementById('adminTabBtn');
         const roleInput = document.getElementById('roleInput');
         const identifierLabel = document.getElementById('identifierLabel');
         const identifierInput = document.getElementById('identifierInput');
@@ -304,6 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         patientTabBtn.addEventListener('click', () => {
             patientTabBtn.classList.add('active');
             doctorTabBtn.classList.remove('active');
+            adminTabBtn.classList.remove('active');
             roleInput.value = 'patient';
             identifierLabel.textContent = 'Email address';
             identifierInput.placeholder = 'you@example.com';
@@ -312,14 +333,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         doctorTabBtn.addEventListener('click', () => {
             doctorTabBtn.classList.add('active');
             patientTabBtn.classList.remove('active');
+            adminTabBtn.classList.remove('active');
             roleInput.value = 'doctor';
             identifierLabel.textContent = 'Email or Doctor ID';
             identifierInput.placeholder = 'you@example.com or DOC-1234';
         });
 
+        adminTabBtn.addEventListener('click', () => {
+            adminTabBtn.classList.add('active');
+            patientTabBtn.classList.remove('active');
+            doctorTabBtn.classList.remove('active');
+            roleInput.value = 'admin';
+            identifierLabel.textContent = 'Administrator Email';
+            identifierInput.placeholder = 'admin@example.com';
+        });
+
         // Initialize based on PHP initial role
         if (roleInput.value === 'doctor') {
             doctorTabBtn.click();
+        } else if (roleInput.value === 'admin') {
+            adminTabBtn.click();
         }
 
         // Password Show/Hide Toggle
