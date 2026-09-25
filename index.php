@@ -1,5 +1,12 @@
 <?php
+require_once __DIR__ . '/auth/auth.php';
 require_once __DIR__ . '/database/db.php';
+require_once __DIR__ . '/include/function.php';
+
+$isLoggedIn = is_logged_in();
+$userRole = current_role();
+$isPatient = $isLoggedIn && $userRole === 'patient';
+$bookAppointmentUrl = 'patient/appointment.php';
 
 // ── Live stats from DB ────────────────────────────────────────────────────────
 try {
@@ -71,8 +78,23 @@ function doctorAvatar(?string $path): string {
     </nav>
 
     <div class="nav-buttons">
-        <a href="login.php" class="login">Login</a>
-        <a href="#appointment" class="btn cherry-btn">Book Appointment</a>
+        <?php if ($isLoggedIn): ?>
+            <?php if ($isPatient): ?>
+                <a href="patient/dashboard.php" class="login">Dashboard</a>
+                <a href="patient/appointment.php" class="btn cherry-btn">Book Appointment</a>
+                <a href="logout.php" class="login" style="font-size: 13px; color: var(--gray);">Sign out</a>
+            <?php elseif ($userRole === 'doctor'): ?>
+                <a href="doctor/dashboard.php" class="login">Doctor Dashboard</a>
+                <a href="logout.php" class="btn oat-btn">Sign out</a>
+            <?php elseif ($userRole === 'admin'): ?>
+                <a href="admin/dashboard.php" class="login">Admin Panel</a>
+                <a href="logout.php" class="btn oat-btn">Sign out</a>
+            <?php endif; ?>
+        <?php else: ?>
+            <a href="login.php" class="login">Sign In</a>
+            <a href="registration/account_selection.php" class="login">Sign Up</a>
+            <a href="<?= $bookAppointmentUrl ?>" class="btn cherry-btn">Book Appointment</a>
+        <?php endif; ?>
     </div>
 </header>
 
@@ -229,7 +251,7 @@ function doctorAvatar(?string $path): string {
                 <small><?= htmlspecialchars($doc['specialization'], ENT_QUOTES) ?></small>
                 <h3>Dr. <?= htmlspecialchars($doc['name'], ENT_QUOTES) ?></h3>
                 <p><?= (int) $doc['experience_years'] ?> years experience</p>
-                <a href="registration/patient_registration.php" class="btn cherry-btn">Book Now</a>
+                <a href="<?= $bookAppointmentUrl ?>" class="btn cherry-btn">Book Now</a>
             </div>
         </div>
         <?php endforeach; ?>
@@ -283,7 +305,7 @@ function doctorAvatar(?string $path): string {
 <!-- ═══════════════════════════════════ CTA ══════════════════════════════════ -->
 <section class="cta" id="appointment">
     <h2>Your next care connection is closer than you think.</h2>
-    <a href="registration/patient_registration.php" class="btn cherry-btn">Book an Appointment</a>
+    <a href="<?= $bookAppointmentUrl ?>" class="btn cherry-btn">Book an Appointment</a>
 </section>
 
 <!-- ═══════════════════════════════════ FOOTER ═══════════════════════════════ -->

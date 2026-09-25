@@ -30,6 +30,7 @@ if ($flash) {
 
 $selectedRole = $_POST['role'] ?? ($_GET['role'] ?? 'patient');
 $identifier = trim($_POST['identifier'] ?? '');
+$redirectUrl = trim($_POST['redirect'] ?? ($_GET['redirect'] ?? ''));
 
 // Handle Login Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -83,6 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } elseif ($user['role'] === 'admin') {
                         redirect('admin/dashboard.php');
                     } else {
+                        if (!empty($redirectUrl)) {
+                            redirect($redirectUrl);
+                        }
                         redirect('patient/dashboard.php');
                     }
                 }
@@ -187,8 +191,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <form method="POST" action="login.php" autocomplete="on">
                     <input type="hidden" name="role" id="roleInput" value="<?= htmlspecialchars($selectedRole, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirectUrl, ENT_QUOTES, 'UTF-8') ?>">
 
                     <!-- Role Switcher -->
                     <div class="role-toggle-group">
