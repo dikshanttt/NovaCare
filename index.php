@@ -1,3 +1,50 @@
+<?php
+require_once __DIR__ . '/database/db.php';
+
+// ── Live stats from DB ────────────────────────────────────────────────────────
+try {
+    $db = getDB();
+
+    $totalDoctors   = (int) $db->query("SELECT COUNT(*) FROM doctors WHERE verification_status = 'verified'")->fetchColumn();
+    $totalHospitals = (int) $db->query("SELECT COUNT(*) FROM hospitals WHERE is_active = TRUE")->fetchColumn();
+    $totalAppointments = (int) $db->query("SELECT COUNT(*) FROM appointments WHERE status IN ('confirmed','completed')")->fetchColumn();
+
+    // Verified doctors for the "Meet your care team" section (limit 4)
+    $stmt = $db->query("
+        SELECT d.name, d.specialization, d.experience_years, d.image_path
+        FROM   doctors d
+        WHERE  d.verification_status = 'verified'
+        ORDER  BY d.verified_at DESC
+        LIMIT  4
+    ");
+    $featuredDoctors = $stmt->fetchAll();
+
+    // Active hospitals (limit 4)
+    $stmt = $db->query("
+        SELECT id, name, address, departments
+        FROM   hospitals
+        WHERE  is_active = TRUE
+        ORDER  BY created_at DESC
+        LIMIT  4
+    ");
+    $featuredHospitals = $stmt->fetchAll();
+
+    $dbOk = true;
+} catch (Throwable $e) {
+    // If DB is unreachable, fall back to placeholder values
+    $dbOk              = false;
+    $totalDoctors      = 0;
+    $totalHospitals    = 0;
+    $totalAppointments = 0;
+    $featuredDoctors   = [];
+    $featuredHospitals = [];
+}
+
+// Helper: return placeholder avatar when doctor has no image
+function doctorAvatar(?string $path): string {
+    return $path ? htmlspecialchars($path, ENT_QUOTES) : 'assets/img/avatar-placeholder.png';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,226 +52,263 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaCare - Healthcare Appointment</title>
     <link rel="stylesheet" href="assets/css/main/style.css">
-
 </head>
 <body>
-    <header class="navbar">
-        <div class="logo">
-            <span>+</span>NovaCare</div>
-            
-            <nav>
-                <a href="#home">Home</a>
-                <a href="#care">Hospitals</a>
-                <a href="Doctors">Doctors</a>
-                <a href="#works">How It Works</a>
-                <a href="#faq">FAQ</a>
-                <a href="#contact">Contact</a>
-</nav>
-<div class="nav-buttons">
-    <a href="login.php" class="login">login</a>
-    
-    <a href="#appointment" class="btn cherry-btn">Book Appointment</a>
-</div>
+
+<!-- ═══════════════════════════════════ NAVBAR ═══════════════════════════════ -->
+<header class="navbar">
+    <div class="logo">
+        <span>+</span>NovaCare
+    </div>
+
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#care">Hospitals</a>
+        <a href="#doctors">Doctors</a>
+        <a href="#works">How It Works</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="nav-buttons">
+        <a href="login.php" class="login">Login</a>
+        <a href="#appointment" class="btn cherry-btn">Book Appointment</a>
+    </div>
 </header>
 
+<!-- ═══════════════════════════════════ HERO ═════════════════════════════════ -->
 <section class="hero" id="home">
     <div class="hero-content">
-        <p class="small-title"> CARE, MADE EASIER </p>
+        <p class="small-title">CARE, MADE EASIER</p>
         <h1>Better care starts with the right connection.</h1>
-        <p class="hero-text" Find trusted hospitals and experienced doctors, comare availability , and book your appointment in a few simple steps.</p>
+        <p class="hero-text">Find trusted hospitals and experienced doctors, compare availability, and book your appointment in a few simple steps.</p>
         <div class="hero-buttons">
-            <a href="#Doctors" class="btn cherry-btn"> Find a Doctor </a>
-            <a href="#care" class="btn oat-btn"> Browse hospitals</a>
-</div class="rating">
-    <span>.</span>
-    <span>.</span>
-    <span>.</span>
-    <b>4.9/5</b> from 8000+ cared-for patients </div>
-</div>
+            <a href="#doctors" class="btn cherry-btn">Find a Doctor</a>
+            <a href="#care" class="btn oat-btn">Browse Hospitals</a>
+        </div>
+        <div class="rating">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            <b>4.9/5</b> from 8,000+ cared-for patients
+        </div>
+    </div>
 
-
-<div class="hero-image">
-    <img src="doctor.jpg" alt="Doctor talking with patient">
-
-    <div class="image-card">
-        <small>.AVAILABILITY TODAY </samll>
-        <h3>Care when it suits you.</h3>
-        <p>128 nearby appointments</p>
-</div>
-</div>
+    <div class="hero-image">
+        <img src="assets/img/doctor-hero.jpg" alt="Doctor talking with patient">
+        <div class="image-card">
+            <small>. AVAILABILITY TODAY</small>
+            <h3>Care when it suits you.</h3>
+            <p><?= $totalAppointments > 0 ? $totalAppointments . '+ confirmed appointments' : '128 nearby appointments' ?></p>
+        </div>
+    </div>
 </section>
 
-
+<!-- ═══════════════════════════════════ CARE / HOSPITALS ═════════════════════ -->
 <section class="care-section" id="care">
     <div class="section-heading">
         <p class="small-title">. DISCOVER CARE</p>
         <h2>A trusted place for every kind of care.</h2>
-        <p> search by specialist,doctor,or hospital, Every provider is verified, so your next step feels informed.</p>
-</div>
+        <p>Search by specialist, doctor, or hospital. Every provider is verified, so your next step feels informed.</p>
+    </div>
 
+    <div class="search-box">
+        <input type="text" placeholder="🔎 Speciality, doctor, or condition">
+        <input type="text" placeholder="📍 Your location">
+        <button class="cherry-btn">Search Care</button>
+    </div>
 
-<div class="search-box">
-    <input type="text" placeholder="🔎 speciality,doctor,or condition">
-    <input type="text" placeholder="📍 your location">
-    <button class="cherry-btn"> Search care</button>
-</div>
-
-
-<div class="categories">
-    <div class="category-card">
+    <?php if ($dbOk && count($featuredHospitals) > 0): ?>
+    <!-- Live hospital cards from DB -->
+    <div class="categories">
+        <?php foreach ($featuredHospitals as $h): ?>
         <div class="category-card">
-    <div class="icon">+</div>
-    <small>cardiology</small>
-    <h3>Heart care</h3>
-     <a href="#">Explore Specialists </a>
-    
-     
-</div>
-   <div class="icon">+</div>
-        <small>Prdiatrics</small>
-        <h3>Growing Families</h3
-        <a href="#">Explore Specialists</a>
-</div>
-
-<div class="category-card">
-    <div class="icon">+</div>
-    <small>Orthopedics</small>
-  <h3> move with Ease</h3>
-  <a href="#">Explore specialists</a>
-</div>
-
-<div class="category-card">
-    <div class="icon">+</div>
-    <small>Primary care</small>
-  <h3> Everyday wellness</h3>
-  <a href="#">Explore specialists</a>
-</div>
-</div>
+            <div class="icon">🏥</div>
+            <small><?= htmlspecialchars($h['departments'] ?? 'General', ENT_QUOTES) ?></small>
+            <h3><?= htmlspecialchars($h['name'], ENT_QUOTES) ?></h3>
+            <a href="#">Explore Specialists &rarr;</a>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php else: ?>
+    <!-- Static fallback when DB has no hospitals yet -->
+    <div class="categories">
+        <div class="category-card">
+            <div class="icon">+</div>
+            <small>Cardiology</small>
+            <h3>Heart Care</h3>
+            <a href="#">Explore Specialists &rarr;</a>
+        </div>
+        <div class="category-card">
+            <div class="icon">+</div>
+            <small>Pediatrics</small>
+            <h3>Growing Families</h3>
+            <a href="#">Explore Specialists &rarr;</a>
+        </div>
+        <div class="category-card">
+            <div class="icon">+</div>
+            <small>Orthopedics</small>
+            <h3>Move with Ease</h3>
+            <a href="#">Explore Specialists &rarr;</a>
+        </div>
+        <div class="category-card">
+            <div class="icon">+</div>
+            <small>Primary Care</small>
+            <h3>Everyday Wellness</h3>
+            <a href="#">Explore Specialists &rarr;</a>
+        </div>
+    </div>
+    <?php endif; ?>
 </section>
 
-
+<!-- ═══════════════════════════════════ HOW IT WORKS ═════════════════════════ -->
 <section class="work" id="works">
     <div class="section-heading center">
-        <p class="small-title">.How It Works</p>
-        <h2> from search to seen in three simple steps.</h2>
+        <p class="small-title">. HOW IT WORKS</p>
+        <h2>From search to seen in three simple steps.</h2>
+        <p>NovaCare keeps your healthcare journey clean from the first search to your visit.</p>
+    </div>
 
-    <p>NovaCare keeps your healthcare journey clean from the first search to your visit.</p>
-</div>
-
-<div class="steps">
-    <div class="step">
-        <span>01</span>
-        <h3>Tell us what you need</h3>
-        <p>choose a specialty,symptom,or preferred hospital.</p>
-</div>
-<div class="step butter">
-    <span>02</span>
-    <h3>compare trusted care</h3>
-    <p> Review Verified profiles,experience,ratings and availability.</p>
-</div>
-<div class="step">
-    <span>03</span>
-    <h3>Book with confidence</h3>
-    <p> Select a time ,share key details,and receive confirmation.</p>
-
-</div>
-</div>
+    <div class="steps">
+        <div class="step">
+            <span>01</span>
+            <h3>Tell us what you need</h3>
+            <p>Choose a specialty, symptom, or preferred hospital.</p>
+        </div>
+        <div class="step butter">
+            <span>02</span>
+            <h3>Compare trusted care</h3>
+            <p>Review verified profiles, experience, ratings and availability.</p>
+        </div>
+        <div class="step">
+            <span>03</span>
+            <h3>Book with confidence</h3>
+            <p>Select a time, share key details, and receive confirmation.</p>
+        </div>
+    </div>
 </section>
 
-<sectionj class="stats">
+<!-- ═══════════════════════════════════ STATS ════════════════════════════════ -->
+<section class="stats">
     <div class="stats-title">
-        <p>.Care you can count on </p>
-        <h2> Human support,backed by a growing care network"</h2>
-</div>
+        <p>. CARE YOU CAN COUNT ON</p>
+        <h2>Human support, backed by a growing care network.</h2>
+    </div>
 
-<div class="stat">
-    <h2>250+</h2>
-    <p>Partner Hospitals</p>
-</div>
+    <div class="stat">
+        <h2><?= $totalHospitals > 0 ? $totalHospitals . '+' : '250+' ?></h2>
+        <p>Partner Hospitals</p>
+    </div>
 
-<div class="stat">
-    <h2>1,800+</h2>
-    <p>verified Doctors</p>
-</div>
+    <div class="stat">
+        <h2><?= $totalDoctors > 0 ? $totalDoctors . '+' : '1,800+' ?></h2>
+        <p>Verified Doctors</p>
+    </div>
 
-<div class="stat">
-    <h2>98%</h2>
-    <p>Booking Satisfaction</p>
-</div>
+    <div class="stat">
+        <h2>98%</h2>
+        <p>Booking Satisfaction</p>
+    </div>
 </section>
 
-<section class="Doctors" id="doctors">
+<!-- ═══════════════════════════════════ DOCTORS ══════════════════════════════ -->
+<section class="doctors" id="doctors">
     <div class="doctor-heading">
         <div>
-            <p class="small-title">.MEET YOUR CARE TEAM</p>
+            <p class="small-title">. MEET YOUR CARE TEAM</p>
             <h2>Find the right doctor for you.</h2>
-            <p> Add and manage doctors based on there speciality,experience,and availability.</p>
-</div>
+            <p>Add and manage doctors based on their speciality, experience, and availability.</p>
+        </div>
+    </div>
 
-<div class="doctor-add-box">
-    <div class="add-icon">+</div>
-    <h3>Add a doctor</h3>
-    <p> Add doctor information here. when you are ready.</p>
-    <button class="add-doctor-btn">+Add Doctor</button>
-</div>
+    <?php if ($dbOk && count($featuredDoctors) > 0): ?>
+    <!-- Live doctor cards from DB -->
+    <div class="doctor-grid">
+        <?php foreach ($featuredDoctors as $doc): ?>
+        <div class="doctor-card">
+            <img src="<?= doctorAvatar($doc['image_path']) ?>" alt="Dr. <?= htmlspecialchars($doc['name'], ENT_QUOTES) ?>">
+            <div class="doctor-card-body">
+                <small><?= htmlspecialchars($doc['specialization'], ENT_QUOTES) ?></small>
+                <h3>Dr. <?= htmlspecialchars($doc['name'], ENT_QUOTES) ?></h3>
+                <p><?= (int) $doc['experience_years'] ?> years experience</p>
+                <a href="registration/patient_registration.php" class="btn cherry-btn">Book Now</a>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php else: ?>
+    <!-- Placeholder when no verified doctors yet -->
+    <div class="doctor-add-box">
+        <div class="add-icon">+</div>
+        <h3>No doctors yet</h3>
+        <p>Verified doctors will appear here once the admin approves them.</p>
+        <a href="registration/dotor_registration.php" class="btn cherry-btn">Register as Doctor</a>
+    </div>
+    <?php endif; ?>
 </section>
 
-
+<!-- ═══════════════════════════════════ FAQ ══════════════════════════════════ -->
 <section class="faq" id="faq">
     <div class="faq-title">
-        <p class="small-title">.GOOD TO KNOW</p>
-        <h2> Questions deserve clear answers.</h2>
-        <p>our care team is here if you need anything beyond these essentials.</p>
-</div>
-<div class="faq-list">
-    <details>
-        <summary>
-            Is NovaCare free for patients?
-            <span>+<span>
-</summary>
-<p>provider information is reviewed before being displayed on the platform.</p>
-</details>
+        <p class="small-title">. GOOD TO KNOW</p>
+        <h2>Questions deserve clear answers.</h2>
+        <p>Our care team is here if you need anything beyond these essentials.</p>
+    </div>
 
-<details>
-    <summary>
-        Can I reschedule or cancle online?<span>+</span>
-</summary>
+    <div class="faq-list">
+        <details>
+            <summary>
+                Is NovaCare free for patients?
+                <span>+</span>
+            </summary>
+            <p>Yes, browsing doctors and hospitals on NovaCare is completely free. Provider information is reviewed before being displayed on the platform.</p>
+        </details>
 
-<p> yes,appointments can be managed through your account.</p>
-</details>
+        <details>
+            <summary>
+                Can I reschedule or cancel online?
+                <span>+</span>
+            </summary>
+            <p>Yes, appointments can be managed through your patient account at any time before the scheduled slot.</p>
+        </details>
 
-<details> 
-    <summary>What information do I need to Book?$_COOKIE<span>+</span>
-</summary>
-<p>
-    You generally need your basic contact information and appointment details.</p>
-</details>
-</div>
+        <details>
+            <summary>
+                What information do I need to book?
+                <span>+</span>
+            </summary>
+            <p>You generally need your basic contact information, date of birth, and the reason for your visit.</p>
+        </details>
+    </div>
 </section>
 
-
+<!-- ═══════════════════════════════════ CTA ══════════════════════════════════ -->
 <section class="cta" id="appointment">
-    <div>
-        <h2> your next care connection is closer than you think.</h2>
-        <p>Book an Appointment</a>
+    <h2>Your next care connection is closer than you think.</h2>
+    <a href="registration/patient_registration.php" class="btn cherry-btn">Book an Appointment</a>
 </section>
 
-<footer id ="contact">
-    <div class="footer-logo">
-</span>+</span>NovCare
-</div>
+<!-- ═══════════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer id="contact">
+    <div class="footer-brand">
+        <div class="footer-logo">
+            <span>+</span>NovaCare
+        </div>
+        <p>Connecting patients with trusted doctors and hospitals across the region.</p>
+    </div>
 
-<div>
-    <h4>Explore</h4>
-    <a href="#care">Hospitals</a>
-    <a href="#doctors">Doctors</a>
-</div>
+    <div>
+        <h4>Explore</h4>
+        <a href="#care">Hospitals</a>
+        <a href="#doctors">Doctors</a>
+        <a href="#works">How It Works</a>
+        <a href="#faq">FAQ</a>
+    </div>
 
-<div>
-    <h4>Contact</h4>
-    <a href="#">hello@novacare.com</a>
-    <a href="#">+1 800 682 2273 </a>
-</div>
+    <div>
+        <h4>Contact</h4>
+        <a href="mailto:hello@novacare.com">hello@novacare.com</a>
+        <a href="tel:+18006822273">+1 800 682 2273</a>
+    </div>
 </footer>
+
 </body>
 </html>

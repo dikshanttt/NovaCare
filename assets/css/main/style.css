@@ -13,7 +13,8 @@
     --grey: var(--gray);
 }
 
-* {
+/* ==================== Reset ==================== */
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -35,6 +36,11 @@ a {
     color: inherit;
 }
 
+img {
+    display: block;
+    max-width: 100%;
+}
+
 /* ==================== Navigation ==================== */
 .navbar {
     height: 82px;
@@ -50,36 +56,38 @@ a {
 }
 
 .logo {
-    font-size: 25px;
+    font-size: 22px;
     font-weight: bold;
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     color: var(--black);
 }
 
 .logo span {
     display: inline-flex;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     background: var(--cherry);
     color: white;
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    margin-right: 7px;
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
 .navbar nav {
     display: flex;
-    gap: 30px;
+    gap: 28px;
 }
 
 .navbar nav a {
     color: #55554e;
     font-size: 14px;
     font-weight: 500;
-    transition: color 0.2s ease;
+    transition: color 0.2s;
 }
 
 .navbar nav a:hover {
@@ -96,7 +104,7 @@ a {
     font-size: 14px;
     font-weight: 600;
     color: #55554e;
-    transition: color 0.2s ease;
+    transition: color 0.2s;
 }
 
 .login:hover {
@@ -106,14 +114,14 @@ a {
 /* ==================== Buttons ==================== */
 .btn {
     display: inline-block;
-    padding: 14px 23px;
+    padding: 13px 24px;
     border-radius: 30px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.1s ease;
     border: none;
     text-align: center;
+    transition: background 0.2s, transform 0.1s;
 }
 
 .btn:active {
@@ -127,6 +135,7 @@ a {
 
 .cherry-btn:hover {
     background: var(--dark-cherry);
+    color: white;
 }
 
 .oat-btn {
@@ -138,9 +147,9 @@ a {
     background: #e2dbcc;
 }
 
-/* ==================== Hero Section ==================== */
+/* ==================== Hero ==================== */
 .hero {
-    min-height: 650px;
+    min-height: 640px;
     padding: 80px 7%;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -149,53 +158,56 @@ a {
 }
 
 .hero-content {
-    max-width: 600px;
+    max-width: 560px;
 }
 
 .small-title {
     color: var(--cherry);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     letter-spacing: 1.5px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     text-transform: uppercase;
 }
 
 .hero h1 {
     font-family: Georgia, serif;
-    font-size: 64px;
+    font-size: 62px;
     line-height: 1.15;
     color: var(--olive);
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .hero-text {
     font-size: 16px;
     color: var(--gray);
-    margin-bottom: 30px;
-    line-height: 1.6;
+    margin-bottom: 28px;
+    line-height: 1.7;
 }
 
-.hero-buttons,
-.hero-bottons {
+.hero-buttons {
     display: flex;
     gap: 12px;
-    margin-bottom: 30px;
     flex-wrap: wrap;
+    margin-bottom: 28px;
 }
 
 .rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 13px;
     color: var(--gray);
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .rating span {
-    font-size: 18px;
-    line-height: 1;
     color: var(--cherry);
+    font-size: 16px;
+}
+
+.rating b {
+    color: var(--black);
+    margin-left: 4px;
 }
 
 .hero-image {
@@ -206,8 +218,7 @@ a {
     width: 100%;
     height: 480px;
     object-fit: cover;
-    border-radius: 35px;
-    display: block;
+    border-radius: 30px;
 }
 
 .image-card {
@@ -215,7 +226,7 @@ a {
     bottom: 25px;
     left: 25px;
     background: var(--light-oat);
-    padding: 20px 25px;
+    padding: 20px 24px;
     border-radius: 18px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
     max-width: 240px;
@@ -224,15 +235,18 @@ a {
 .image-card small {
     color: var(--olive);
     font-weight: bold;
-    font-size: 11px;
-    letter-spacing: 0.5px;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
 }
 
 .image-card h3 {
     font-family: Georgia, serif;
-    margin: 7px 0;
-    font-size: 18px;
+    font-size: 17px;
     color: var(--black);
+    margin-bottom: 4px;
 }
 
 .image-card p {
@@ -240,7 +254,7 @@ a {
     font-size: 13px;
 }
 
-/* ==================== Care Section ==================== */
+/* ==================== Care / Hospitals ==================== */
 .care-section {
     padding: 100px 7%;
     background: var(--oat);
@@ -252,25 +266,26 @@ a {
 
 .section-heading h2 {
     font-family: Georgia, serif;
-    font-size: 50px;
+    font-size: 48px;
     line-height: 1.1;
     color: var(--olive);
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .section-heading p {
     color: var(--gray);
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.6;
 }
 
 .search-box {
-    margin-top: 45px;
+    margin-top: 40px;
     background: var(--light-oat);
-    padding: 12px;
+    padding: 10px;
     border-radius: 25px;
     display: grid;
     grid-template-columns: 2fr 1fr auto;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
 }
 
@@ -278,23 +293,23 @@ a {
     border: none;
     background: white;
     border-radius: 18px;
-    padding: 18px;
+    padding: 16px 20px;
     font-size: 14px;
     outline: none;
-    width: 100%;
+    color: var(--black);
 }
 
 .search-box button {
     border: none;
-    padding: 0 28px;
+    padding: 16px 28px;
     border-radius: 20px;
     background: var(--cherry);
     color: white;
     font-weight: bold;
     cursor: pointer;
-    height: 100%;
-    min-height: 52px;
-    transition: background 0.2s ease;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: background 0.2s;
 }
 
 .search-box button:hover {
@@ -313,45 +328,54 @@ a {
     padding: 28px;
     min-height: 190px;
     border-radius: 20px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .category-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
 }
 
 .icon {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     background: var(--light-butter);
     color: var(--cherry);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    font-size: 18px;
     font-weight: bold;
 }
 
 .category-card small {
     color: var(--cherry);
     font-weight: bold;
-    text-transform: uppercase;
     font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
 }
 
 .category-card h3 {
     font-family: Georgia, serif;
     color: var(--olive);
-    margin: 5px 0 18px;
     font-size: 20px;
+    margin-bottom: 14px;
 }
 
 .category-card a {
     font-size: 13px;
     color: var(--gray);
     font-weight: 500;
+    transition: color 0.2s;
+}
+
+.category-card a:hover {
+    color: var(--cherry);
 }
 
 /* ==================== How It Works ==================== */
@@ -362,14 +386,15 @@ a {
 }
 
 .center {
-    margin: auto;
     text-align: center;
+    margin: 0 auto;
+    max-width: 650px;
 }
 
 .steps {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
+    gap: 24px;
     margin-top: 50px;
 }
 
@@ -390,21 +415,23 @@ a {
     color: var(--cherry);
     font-weight: bold;
     display: block;
+    margin-bottom: 16px;
 }
 
 .step h3 {
     font-family: Georgia, serif;
-    font-size: 24px;
-    margin: 20px 0 10px;
+    font-size: 22px;
     color: var(--olive);
+    margin-bottom: 10px;
 }
 
 .step p {
     color: var(--gray);
     font-size: 14px;
+    line-height: 1.6;
 }
 
-/* ==================== Stats Section ==================== */
+/* ==================== Stats ==================== */
 .stats {
     background: var(--cherry);
     color: white;
@@ -417,34 +444,34 @@ a {
 
 .stats-title p {
     color: var(--butter);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
+    margin-bottom: 12px;
 }
 
 .stats-title h2 {
     font-family: Georgia, serif;
-    font-size: 30px;
+    font-size: 28px;
+    line-height: 1.3;
     max-width: 350px;
     color: white;
-    line-height: 1.2;
 }
 
 .stat h2 {
     color: var(--butter);
     font-family: Georgia, serif;
-    font-size: 45px;
-    margin-bottom: 5px;
+    font-size: 44px;
+    margin-bottom: 4px;
 }
 
 .stat p {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 14px;
 }
 
-/* ==================== Doctors Section ==================== */
-.Doctors,
+/* ==================== Doctors ==================== */
 .doctors {
     padding: 100px 7%;
     background: var(--light-oat);
@@ -459,21 +486,80 @@ a {
 
 .doctor-heading h2 {
     font-family: Georgia, serif;
-    font-size: 50px;
+    font-size: 48px;
     line-height: 1.1;
     color: var(--olive);
     max-width: 500px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .doctor-heading p {
     color: var(--gray);
     max-width: 550px;
-    font-size: 16px;
+    font-size: 15px;
 }
 
+/* Live doctor grid */
+.doctor-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+}
+
+.doctor-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.doctor-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.doctor-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.doctor-card-body {
+    padding: 20px;
+}
+
+.doctor-card-body small {
+    color: var(--cherry);
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.doctor-card-body h3 {
+    font-family: Georgia, serif;
+    font-size: 18px;
+    color: var(--olive);
+    margin-bottom: 4px;
+}
+
+.doctor-card-body p {
+    color: var(--gray);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.doctor-card-body .btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+}
+
+/* Placeholder box when no doctors */
 .doctor-add-box {
-    min-height: 300px;
+    min-height: 280px;
     background: var(--oat);
     border: 2px dashed var(--olive);
     border-radius: 25px;
@@ -483,95 +569,80 @@ a {
     align-items: center;
     text-align: center;
     padding: 40px;
+    gap: 8px;
 }
 
 .add-icon {
-    width: 65px;
-    height: 65px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: var(--cherry);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 35px;
-    margin-bottom: 20px;
-    font-weight: bold;
+    font-size: 32px;
+    margin-bottom: 12px;
 }
 
 .doctor-add-box h3 {
     font-family: Georgia, serif;
-    font-size: 28px;
+    font-size: 26px;
     color: var(--olive);
-    margin-bottom: 8px;
 }
 
 .doctor-add-box p {
     color: var(--gray);
-    margin-bottom: 20px;
     font-size: 14px;
+    max-width: 340px;
+    margin-bottom: 8px;
 }
 
-.add-doctor-btn {
-    border: none;
-    background: var(--cherry);
-    color: white;
-    padding: 13px 25px;
-    border-radius: 25px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s ease;
-}
-
-.add-doctor-btn:hover {
-    background: var(--dark-cherry);
-}
-
-/* ==================== FAQ Section ==================== */
+/* ==================== FAQ ==================== */
 .faq {
     padding: 100px 7%;
     background: var(--oat);
     display: grid;
-    grid-template-columns: 1fr 1.3fr;
-    gap: 60px;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 70px;
     align-items: start;
-}
-
-.faq-title {
-    max-width: 480px;
 }
 
 .faq-title h2 {
     font-family: Georgia, serif;
-    font-size: 50px;
+    font-size: 48px;
     line-height: 1.1;
     color: var(--olive);
-    margin-bottom: 20px;
+    margin: 14px 0 18px;
 }
 
 .faq-title p {
     color: var(--gray);
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.6;
+}
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
 .faq-list details {
     background: white;
     padding: 22px 26px;
     border-radius: 18px;
-    margin-bottom: 16px;
     cursor: pointer;
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s;
 }
 
 .faq-list details:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .faq-list summary {
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--black);
     display: flex;
     justify-content: space-between;
@@ -585,10 +656,11 @@ a {
 }
 
 .faq-list summary span {
-    font-size: 20px;
+    font-size: 22px;
     color: var(--cherry);
-    font-weight: bold;
-    transition: transform 0.2s ease;
+    transition: transform 0.25s;
+    flex-shrink: 0;
+    margin-left: 12px;
 }
 
 .faq-list details[open] summary span {
@@ -599,13 +671,13 @@ a {
     margin-top: 14px;
     color: var(--gray);
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
-/* ==================== CTA Section ==================== */
+/* ==================== CTA ==================== */
 .cta {
-    padding: 70px 7%;
-    margin: 40px 7% 100px;
+    margin: 0 7% 80px;
+    padding: 60px 70px;
     background: var(--butter);
     border-radius: 30px;
     display: flex;
@@ -616,14 +688,15 @@ a {
 
 .cta h2 {
     font-family: Georgia, serif;
-    font-size: 42px;
+    font-size: 40px;
     line-height: 1.2;
     color: var(--olive);
-    max-width: 600px;
+    max-width: 560px;
 }
 
 .cta .btn {
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* ==================== Footer ==================== */
@@ -636,46 +709,61 @@ footer {
     gap: 40px;
 }
 
+.footer-brand p {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    margin-top: 14px;
+    max-width: 280px;
+    line-height: 1.6;
+}
+
 .footer-logo {
-    font-size: 25px;
+    font-size: 22px;
     font-weight: bold;
     color: var(--butter);
     display: inline-flex;
     align-items: center;
+    gap: 6px;
 }
 
 .footer-logo span {
     display: inline-flex;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     background: var(--cherry);
     color: white;
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    margin-right: 8px;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: bold;
 }
 
 footer h4 {
     color: var(--butter);
-    margin-bottom: 15px;
-    font-size: 16px;
+    margin-bottom: 16px;
+    font-size: 15px;
 }
 
 footer a {
     display: block;
-    color: #ddd;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
-    margin-bottom: 8px;
-    transition: color 0.2s ease;
+    margin-bottom: 10px;
+    transition: color 0.2s;
 }
 
 footer a:hover {
     color: var(--butter);
 }
 
-/* ==================== Responsive Media Queries ==================== */
+/* ==================== Responsive ==================== */
+@media (max-width: 1100px) {
+    .doctor-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 900px) {
     .navbar nav {
         display: none;
@@ -688,7 +776,7 @@ footer a:hover {
     }
 
     .hero h1 {
-        font-size: 52px;
+        font-size: 48px;
     }
 
     .categories {
@@ -701,12 +789,17 @@ footer a:hover {
 
     .stats {
         grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .stats-title {
+        grid-column: 1 / -1;
     }
 
     .doctor-heading {
         flex-direction: column;
         align-items: flex-start;
-        gap: 20px;
+        gap: 16px;
     }
 
     .faq {
@@ -717,7 +810,7 @@ footer a:hover {
     .cta {
         flex-direction: column;
         align-items: flex-start;
-        margin: 40px 5% 70px;
+        margin: 0 5% 60px;
         padding: 50px 6%;
     }
 
@@ -736,18 +829,18 @@ footer a:hover {
     }
 
     .hero h1 {
-        font-size: 40px;
+        font-size: 38px;
     }
 
     .search-box {
         grid-template-columns: 1fr;
     }
 
-    .search-box button {
-        padding: 15px;
+    .categories {
+        grid-template-columns: 1fr;
     }
 
-    .categories {
+    .doctor-grid {
         grid-template-columns: 1fr;
     }
 
@@ -763,8 +856,12 @@ footer a:hover {
         font-size: 36px;
     }
 
+    .cta {
+        margin: 0 4% 50px;
+    }
+
     .cta h2 {
-        font-size: 32px;
+        font-size: 30px;
     }
 
     footer {
