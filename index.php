@@ -16,6 +16,21 @@ try {
     $totalHospitals = (int) $db->query("SELECT COUNT(*) FROM hospitals WHERE is_active = TRUE")->fetchColumn();
     $totalAppointments = (int) $db->query("SELECT COUNT(*) FROM appointments WHERE status IN ('confirmed','completed')")->fetchColumn();
 
+    // Booking completion / satisfaction rate
+    $bookingData = $db->query("
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE status = 'completed') AS completed
+        FROM appointments
+    ")->fetch();
+
+    $totalBookings = (int) ($bookingData['total'] ?? 0);
+    $completedBookings = (int) ($bookingData['completed'] ?? 0);
+
+    $bookingSatisfaction = $totalBookings > 0
+        ? round(($completedBookings / $totalBookings) * 100)
+        : 98;
+
     // Verified doctors for the "Meet your care team" section (limit 4)
     $stmt = $db->query("
         SELECT d.name, d.specialization, d.experience_years, d.image_path
@@ -39,12 +54,13 @@ try {
     $dbOk = true;
 } catch (Throwable $e) {
     // If DB is unreachable, fall back to placeholder values
-    $dbOk              = false;
-    $totalDoctors      = 0;
-    $totalHospitals    = 0;
-    $totalAppointments = 0;
-    $featuredDoctors   = [];
-    $featuredHospitals = [];
+    $dbOk                = false;
+    $totalDoctors        = 1800;
+    $totalHospitals      = 250;
+    $totalAppointments   = 0;
+    $bookingSatisfaction = 98;
+    $featuredDoctors     = [];
+    $featuredHospitals   = [];
 }
 
 // Helper: return placeholder avatar when doctor has no image
@@ -107,11 +123,7 @@ function doctorAvatar(?string $path): string {
         <div class="hero-buttons">
             <a href="#doctors" class="btn cherry-btn">Find a Doctor</a>
             <a href="#care" class="btn oat-btn">Browse Hospitals</a>
-        </div>
-        <div class="rating">
-            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-            <b>4.9/5</b> from 8,000+ cared-for patients
-        </div>
+        </div>  
     </div>
 
     <div class="hero-image">
@@ -210,25 +222,25 @@ function doctorAvatar(?string $path): string {
 
 <!-- ═══════════════════════════════════ STATS ════════════════════════════════ -->
 <section class="stats">
-    <div class="stats-title">
-        <p>. CARE YOU CAN COUNT ON</p>
-        <h2>Human support, backed by a growing care network.</h2>
-    </div>
+   <div class="stats-title">
+    <p>. CARE YOU CAN COUNT ON</p>
+    <h2>Human support, backed by a growing care network.</h2>
+</div>
 
-    <div class="stat">
-        <h2><?= $totalHospitals > 0 ? $totalHospitals . '+' : '250+' ?></h2>
-        <p>Partner Hospitals</p>
-    </div>
+<div class="stat">
+    <h2><?= $totalHospitals ?>+</h2>
+    <p>Partner Hospitals</p>
+</div>
 
-    <div class="stat">
-        <h2><?= $totalDoctors > 0 ? $totalDoctors . '+' : '1,800+' ?></h2>
-        <p>Verified Doctors</p>
-    </div>
+<div class="stat">
+    <h2><?= number_format($totalDoctors) ?>+</h2>
+    <p>Verified Doctors</p>
+</div>
 
-    <div class="stat">
-        <h2>98%</h2>
-        <p>Booking Satisfaction</p>
-    </div>
+<div class="stat">
+    <h2><?= $bookingSatisfaction ?>%</h2>
+    <p>Booking Completion</p>
+</div>
 </section>
 
 <!-- ═══════════════════════════════════ DOCTORS ══════════════════════════════ -->

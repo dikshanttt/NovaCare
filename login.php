@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </nav>
 
         <div>
-            <a href="index.php#appointment" class="btn-nav-book">Book Appointment</a>
+            <a href="<?= $bookAppointmentUrl ?>" class="btn-nav-book">Book Appointment</a>
         </div>
     </header>
 
