@@ -1,91 +1,333 @@
+<?php
+require_once __DIR__ . '/auth/auth.php';
+require_once __DIR__ . '/database/db.php';
+require_once __DIR__ . '/include/function.php';
+
+// If user is already logged in, redirect them to their respective dashboard
+if (is_logged_in()) {
+    $role = current_role();
+    if ($role === 'doctor') {
+        redirect('doctor/dashboard.php');
+    } elseif ($role === 'admin') {
+        redirect('admin/dashboard.php');
+    } else {
+        redirect('patient/dashboard.php');
+    }
+}
+
+$errorMessage = '';
+$successMessage = '';
+
+// Check for flash messages
+$flash = get_flash();
+if ($flash) {
+    if ($flash['type'] === 'error') {
+        $errorMessage = $flash['message'];
+    } elseif ($flash['type'] === 'success') {
+        $successMessage = $flash['message'];
+    }
+}
+
+$selectedRole = $_POST['role'] ?? ($_GET['role'] ?? 'patient');
+$identifier = trim($_POST['identifier'] ?? '');
+
+// Handle Login Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $password = $_POST['password'] ?? '';
+    $selectedRole = in_array($_POST['role'] ?? '', ['patient', 'doctor']) ? $_POST['role'] : 'patient';
+
+    if (empty($identifier) || empty($password)) {
+        $errorMessage = 'Please enter both your login identifier and password.';
+    } else {
+        try {
+            $db = getDB();
+
+            if ($selectedRole === 'doctor') {
+                // Doctors can log in via email OR doctor_login_id
+                $stmt = $db->prepare("
+                    SELECT u.id, u.email, u.password_hash, u.role, u.status, u.force_password_change,
+                           d.doctor_login_id, d.verification_status, d.name
+                    FROM users u
+                    JOIN doctors d ON d.user_id = u.id
+                    WHERE (LOWER(u.email) = LOWER(?) OR UPPER(d.doctor_login_id) = UPPER(?))
+                    LIMIT 1
+                ");
+                $stmt->execute([$identifier, $identifier]);
+                $user = $stmt->fetch();
+            } else {
+                // Patients and Admins log in via email
+                $stmt = $db->prepare("
+                    SELECT u.id, u.email, u.password_hash, u.role, u.status, u.force_password_change
+                    FROM users u
+                    WHERE LOWER(u.email) = LOWER(?)
+                    LIMIT 1
+                ");
+                $stmt->execute([$identifier]);
+                $user = $stmt->fetch();
+            }
+
+            if ($user && password_verify($password, $user['password_hash'])) {
+                // Check account verification and active status
+                if ($user['role'] === 'doctor' && $user['status'] === 'pending') {
+                    $errorMessage = 'Your doctor account is currently pending administrative verification. Please wait for confirmation.';
+                } elseif ($user['status'] === 'rejected') {
+                    $errorMessage = 'Your account has been rejected. Please contact administration for assistance.';
+                } elseif ($user['status'] !== 'active') {
+                    $errorMessage = 'Your account is not active. Please contact support.';
+                } else {
+                    // Valid credentials and active status
+                    login_user((int) $user['id'], $user['role'], (bool) $user['force_password_change']);
+
+                    if ($user['role'] === 'doctor') {
+                        redirect('doctor/dashboard.php');
+                    } elseif ($user['role'] === 'admin') {
+                        redirect('admin/dashboard.php');
+                    } else {
+                        redirect('patient/dashboard.php');
+                    }
+                }
+            } else {
+                $errorMessage = 'Invalid email/ID or password. Please try again.';
+            }
+
+        } catch (Throwable $e) {
+            error_log('Login error: ' . $e->getMessage());
+            $errorMessage = 'A system error occurred. Please try again later.';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=, initial-scale=1.0">
-    <title>Document</title>
-       <link rel="stylesheet" href="assets/css/style.css?v=<?= filemtime('assets/css/style.css'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - NovaCare</title>
+    <link rel="stylesheet" href="assets/css/auth.css">
 </head>
 <body>
 
-<div class="page">
-    <section  class="brand">
-        <div class="brand-card">
-            <div class="brand-mark">
-                <div class="logo-badge">+</div>
-                <div class="brand-name">NOVA<span>CARE<span></div>
-</div>
+    <!-- Header Navigation -->
+    <header class="auth-navbar">
+        <a href="index.php" class="auth-logo">
+            <span class="auth-logo-badge">+</span>
+            NovaCare
+        </a>
 
-<h1>ACCESS YOUR HEALTHCARE DASHBOARD</h1>
-<p class="lead">manage your upcoming appointments,track patient queues, and access medical consultations securely.</p>
+        <nav class="auth-nav-links">
+            <a href="index.php#home">Home</a>
+            <a href="index.php#care">Hospitals</a>
+            <a href="index.php#doctors">Doctors</a>
+            <a href="index.php#works">How It Works</a>
+            <a href="index.php#faq">FAQ</a>
+            <a href="index.php#contact">Contact</a>
+        </nav>
 
-<div class ="verify-box">
-    <div class="check-dot">&#10003;</div>
-<div>
-    <strong>Instant queue verification</strong>
-    <span>Direct hospital token access</span>
-</div>
-</div>
+        <div>
+            <a href="index.php#appointment" class="btn-nav-book">Book Appointment</a>
+        </div>
+    </header>
 
-<ul class="feature-list">
+    <!-- Subnav Breadcrumb -->
+    <div class="auth-subnav">
+        <a href="index.php" class="auth-back-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back to NovaCare
+        </a>
+        <span class="auth-breadcrumb-current">/ Sign in</span>
+    </div>
 
-<li>
-    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="current color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7v5l-3 3"/></svg>
-Instant appointment rescheduling
-</li>
-<li>
-    <svg class="feature-icon" viewbox="0 0 24 24" fill="none" stroke="current color" stroke-width ="2" stroke-linecape="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m8 2v4m16 2v4m3 10h18"/></svg>
-    24/7 verified specialist network
-</li>
-</ul>
-</div>
-</section>
+    <!-- Main Content: Split Grid Layout -->
+    <main class="auth-main-container">
+        <div class="auth-split-grid">
 
-<!--Right side of the page-->
-<section class="form-side">
-    <div class="form-card">
-        <span class="signin-tag">secure sign in</span>
-        <h2>Welcome</h2>
-        <p>Enter your regestered email or Doctor id.</p>
+            <!-- Left Visual Card -->
+            <div class="auth-hero-visual">
+                <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1000&q=80" alt="Doctor and patient consultation" class="auth-hero-bg">
+                <div class="auth-hero-overlay"></div>
 
-        <form id="loginform"autocomplete="off">
-            <div class="field">
-                <label for ="identifier"Email or Doctor ID</label>
-                <input type="text" id="identifier" name="identifier" placeholder="eg.abc@gmail.com or DR1254"required>
-</div>
+                <div class="auth-hero-content">
+                    <span class="auth-hero-tag">Your care, in one place</span>
+                    <h1 class="auth-hero-title">Welcome back to care that feels connected.</h1>
+                    <p class="auth-hero-desc">Access appointments, care details, and trusted providers through your private NovaCare account.</p>
+                </div>
 
-<div class="field">
-    <label for="password">password</label>
-    <div class="password-wrap">
-        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-        <button type="button" class="toggle-eye" id="toggle-eye" aria-label="show password">
-            <svg  width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=m1 12s4-7 11-7 11 7 11 7-4 7-11 1-11-7-11-7z"/><circle cx="12" cy="12" r="13"/></svg>
-</button>
-</div>
-</div>
+                <div class="auth-floating-badge">
+                    <div class="auth-badge-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <div class="auth-badge-text">
+                        <h4>Private by design</h4>
+                        <p>HIPAA-ready security protects your personal health information every step of the way.</p>
+                    </div>
+                </div>
+            </div>
 
-<button type="submit" class ="signin-btn">sign in </button>
-</form>
+            <!-- Right White Sign In Card -->
+            <div class="auth-card">
+                <span class="auth-card-tag">Secure Sign In</span>
+                <h2 class="auth-card-title">Welcome back.</h2>
+                <p class="auth-card-subtitle">Choose how you use NovaCare, then enter your account details.</p>
 
-<p class="form-foot">New to NovaCare? <a href ="#">Create an accoount</a></p>
-<a href="#" class="back-home">&larr; Back to homepage</a>
-</div>
-</section>
+                <!-- Feedback Alerts -->
+                <?php if (!empty($errorMessage)): ?>
+                    <div class="auth-alert error">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                <?php endif; ?>
 
-</div>
-<script>
-    const toggle = document.getElementById ('toggleEye');
-    const pwd = document.getElementById('password');
-    toggle.addEventListner ('click',() => {
-        const isPassword = pwd.type === 'password';
-        pwd.type = isPassword ? 'text' : 'password';
-        toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'show password');
+                <?php if (!empty($successMessage)): ?>
+                    <div class="auth-alert success">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span><?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                <?php endif; ?>
 
-    });
+                <form method="POST" action="login.php" autocomplete="on">
+                    <input type="hidden" name="role" id="roleInput" value="<?= htmlspecialchars($selectedRole, ENT_QUOTES, 'UTF-8') ?>">
 
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-    });
-</script>
+                    <!-- Role Switcher -->
+                    <div class="role-toggle-group">
+                        <label class="role-toggle-label">I'm signing in as</label>
+                        <div class="role-toggle-pills">
+                            <button type="button" class="role-pill-btn <?= $selectedRole === 'patient' ? 'active' : '' ?>" id="patientTabBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                Patient
+                            </button>
+
+                            <button type="button" class="role-pill-btn <?= $selectedRole === 'doctor' ? 'active' : '' ?>" id="doctorTabBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/>
+                                    <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/>
+                                    <circle cx="20" cy="10" r="2"/>
+                                </svg>
+                                Doctor
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Identifier Input (Email or Doctor Login ID) -->
+                    <div class="form-group">
+                        <label for="identifier" class="form-label" id="identifierLabel">Email address</label>
+                        <div class="input-wrap">
+                            <span class="input-icon-left">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                            </span>
+                            <input type="text" id="identifier" name="identifier" class="form-input" 
+                                   placeholder="you@example.com"
+                                   value="<?= htmlspecialchars($identifier, ENT_QUOTES, 'UTF-8') ?>" 
+                                   required autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon-left">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                            </span>
+                            <input type="password" id="password" name="password" class="form-input" 
+                                   placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle-btn" id="togglePassword">Show</button>
+                        </div>
+                    </div>
+
+                    <!-- Remember me & Forgot Password -->
+                    <div class="form-actions-row">
+                        <label class="remember-label">
+                            <input type="checkbox" name="remember" value="1">
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-auth-submit">
+                        <span>Log in securely</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </form>
+
+                <p class="auth-card-foot">
+                    New to NovaCare? <a href="registration/account_selection.php">Create an account</a>
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Dark Bottom Footer Strip -->
+    <footer class="auth-dark-footer">
+        <div class="auth-dark-footer-inner">
+            <div class="footer-brand-logo">
+                <span>+</span>NovaCare
+            </div>
+
+            <div class="footer-support-text">
+                Need help? +1 800 682 2273 &bull; Mon&ndash;Sat, 9am&ndash;8pm
+            </div>
+
+            <div class="footer-badges">
+                <span>Secure care coordination</span>
+                <span>&bull;</span>
+                <span>HIPAA-ready</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Role Tab Switching
+        const patientTabBtn = document.getElementById('patientTabBtn');
+        const doctorTabBtn = document.getElementById('doctorTabBtn');
+        const roleInput = document.getElementById('roleInput');
+        const identifierLabel = document.getElementById('identifierLabel');
+        const identifierInput = document.getElementById('identifierInput');
+
+        patientTabBtn.addEventListener('click', () => {
+            patientTabBtn.classList.add('active');
+            doctorTabBtn.classList.remove('active');
+            roleInput.value = 'patient';
+            identifierLabel.textContent = 'Email address';
+            identifierInput.placeholder = 'you@example.com';
+        });
+
+        doctorTabBtn.addEventListener('click', () => {
+            doctorTabBtn.classList.add('active');
+            patientTabBtn.classList.remove('active');
+            roleInput.value = 'doctor';
+            identifierLabel.textContent = 'Email or Doctor ID';
+            identifierInput.placeholder = 'you@example.com or DOC-1234';
+        });
+
+        // Initialize based on PHP initial role
+        if (roleInput.value === 'doctor') {
+            doctorTabBtn.click();
+        }
+
+        // Password Show/Hide Toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            togglePassword.textContent = isPassword ? 'Hide' : 'Show';
+        });
+    </script>
+
 </body>
 </html>
