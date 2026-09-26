@@ -176,11 +176,11 @@ function doctorAvatar(?string $path): string {
     </div>
 
     <div class="hero-image">
-        <img src="assets/img/doctor-hero.jpg" alt="Doctor talking with patient">
+        <img src="assets/img/dma.jpg" alt="Doctor talking with patient">
         <div class="image-card">
-            <small>. AVAILABILITY TODAY</small>
-            <h3>Care when it suits you.</h3>
-            <p><?= $totalAppointments > 0 ? $totalAppointments . '+ confirmed appointments' : '128 nearby appointments' ?></p>
+            <small>• AVAILABILITY TODAY</small>
+            <h3>Expert care within reach.</h3>
+            <p>Find the right specialist and receive care without unnecessary delays.</p>
         </div>
     </div>
 </section>
@@ -188,7 +188,7 @@ function doctorAvatar(?string $path): string {
 <!-- ═══════════════════════════════════ CARE / HOSPITALS ═════════════════════ -->
 <section class="care-section" id="care">
     <div class="section-heading">
-        <p class="small-title">. DISCOVER CARE</p>
+        <p class="small-title">• DISCOVER CARE</p>
         <h2>A trusted place for every kind of care.</h2>
         <p>Search by specialist, doctor, or hospital. Every provider is verified, so your next step feels informed.</p>
     </div>
@@ -245,7 +245,7 @@ function doctorAvatar(?string $path): string {
 <!-- ═══════════════════════════════════ HOW IT WORKS ═════════════════════════ -->
 <section class="work" id="works">
     <div class="section-heading center">
-        <p class="small-title">. HOW IT WORKS</p>
+        <p class="small-title">• HOW IT WORKS</p>
         <h2>From search to seen in three simple steps.</h2>
         <p>NovaCare keeps your healthcare journey clean from the first search to your visit.</p>
     </div>
@@ -272,7 +272,7 @@ function doctorAvatar(?string $path): string {
 <!-- ═══════════════════════════════════ STATS ════════════════════════════════ -->
 <section class="stats">
    <div class="stats-title">
-    <p>. CARE YOU CAN COUNT ON</p>
+    <p>• CARE YOU CAN COUNT ON</p>
     <h2>Human support, backed by a growing care network.</h2>
 </div>
 
@@ -296,9 +296,9 @@ function doctorAvatar(?string $path): string {
 <section class="doctors" id="doctors">
     <div class="doctor-heading">
         <div>
-            <p class="small-title">. MEET YOUR CARE TEAM</p>
+            <p class="small-title">• MEET YOUR CARE TEAM</p>
             <h2>Find the right doctor for you.</h2>
-            <p>Add and manage doctors based on their speciality, experience, and availability.</p>
+            <p>Connect with trusted healthcare professionals based on their specialty, experience, and availability.</p>
         </div>
     </div>
 
@@ -331,7 +331,7 @@ function doctorAvatar(?string $path): string {
 <!-- ═══════════════════════════════════ FAQ ══════════════════════════════════ -->
 <section class="faq" id="faq">
     <div class="faq-title">
-        <p class="small-title">. GOOD TO KNOW</p>
+        <p class="small-title">• GOOD TO KNOW</p>
         <h2>Questions deserve clear answers.</h2>
         <p>Our care team is here if you need anything beyond these essentials.</p>
     </div>
@@ -388,8 +388,8 @@ function doctorAvatar(?string $path): string {
 
     <div>
         <h4>Contact</h4>
-        <a href="mailto:hello@novacare.com">hello@novacare.com</a>
-        <a href="tel:+18006822273">+1 800 682 2273</a>
+        <a href="mailto:dikshantlama77@gmail.com">dikshantlama77@gmail.com</a>
+        <a href="tel:+9779827012977">+977 982-7012977</a>
     </div>
 </footer>
 

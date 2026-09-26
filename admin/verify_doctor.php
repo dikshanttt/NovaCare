@@ -41,12 +41,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->commit();
 
                 if ($docInfo && !empty($docInfo['email'])) {
-                    $apprSubject = 'NovaCare - Account Verified';
+                    $apprSubject = 'NovaCare — Doctor Account Verified';
+
                     $apprBody = "Hello Dr. {$docInfo['name']},\n\n"
-                        . "Congratulations! Your doctor profile has been verified and activated by our administration team.\n\n"
-                        . "You can now log in using your Doctor Login ID: {$docInfo['doctor_login_id']}\n"
-                        . "Login page: " . base_path() . "/login.php\n\n"
-                        . "Best regards,\nNovaCare Healthcare Network";
+                        . "Your doctor registration has been successfully reviewed and your NovaCare provider account has been verified and activated.\n\n"
+                        . "ACCOUNT DETAILS\n"
+                        . "Doctor Login ID: {$docInfo['doctor_login_id']}\n"
+                        . "Account Status: Verified and Active\n\n"
+                        . "You can now access your NovaCare provider dashboard using your Doctor Login ID.\n\n"
+                        . "Login Page: " . base_path() . "/login.php\n\n"
+                        . "For your security, please keep your login credentials confidential.\n\n"
+                        . "Regards,\n"
+                        . "NovaCare Healthcare Team\n"
+                        . "Connecting patients with better care";
+
                     send_email($docInfo['email'], $apprSubject, $apprBody);
                 }
 

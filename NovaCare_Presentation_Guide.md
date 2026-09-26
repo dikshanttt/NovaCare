@@ -85,7 +85,7 @@ flowchart TD
 * **What it means in your project:** Patient health information is strictly segmented. 
 * **Implementation:** A patient can only view their own records (`WHERE patient_id = :session_id`). A doctor can only access details for patients who have actively booked an appointment with them. Raw medical queries are never exposed without authentication checks.
 
-### "HIPAA-Ready Security"
+### "Privacy focused Security"
 The **Health Insurance Portability and Accountability Act (HIPAA)** governs the security and privacy of electronic Protected Health Information (ePHI). In this application, "HIPAA-ready" encompasses four engineering pillars:
 1. **Access Control (RBAC):** Strict separation between `patient`, `doctor`, and `admin` enforced at the server level via `require_login(['role'])`.
 2. **Cryptographic Protection:** Passwords are never stored in plaintext; they use one-way salted `bcrypt` algorithms (`PASSWORD_DEFAULT` with cost 12).

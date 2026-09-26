@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Registration - NovaCare</title>
-    <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="../assets/css/login/auth.css">
 </head>
 <body>
 
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </svg>
                             </span>
                             <input type="text" id="name" name="name" class="form-input" 
-                                   placeholder="e.g. Sarah Jenkins"
+                                   placeholder="e.g. Nirjala Pokharel"
                                    value="<?= htmlspecialchars($formData['name'], ENT_QUOTES, 'UTF-8') ?>" required>
                         </div>
                     </div>
@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </svg>
                                 </span>
                                 <input type="email" id="email" name="email" class="form-input" 
-                                       placeholder="sarah@example.com"
+                                       placeholder="patient@example.com"
                                        value="<?= htmlspecialchars($formData['email'], ENT_QUOTES, 'UTF-8') ?>" required>
                             </div>
                         </div>
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </svg>
                                 </span>
                                 <input type="tel" id="phone" name="phone" class="form-input" 
-                                       placeholder="+1 (555) 000-0000"
+                                       placeholder="+977 981-2345678"
                                        value="<?= htmlspecialchars($formData['phone'], ENT_QUOTES, 'UTF-8') ?>" required>
                             </div>
                         </div>
@@ -265,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="address" class="form-label">Home Address</label>
                             <div class="input-wrap">
                                 <input type="text" id="address" name="address" class="form-input no-icon" 
-                                       placeholder="City, State"
+                                       placeholder="City, District"
                                        value="<?= htmlspecialchars($formData['address'], ENT_QUOTES, 'UTF-8') ?>">
                             </div>
                         </div>
@@ -345,7 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="footer-support-text">
-                Need help? +1 800 682 2273 &bull; Mon&ndash;Sat, 9am&ndash;8pm
+                Need help? +977 982-72977 &bull; Mon&ndash;Sat, 9am&ndash;8pm
             </div>
 
             <div class="footer-badges">

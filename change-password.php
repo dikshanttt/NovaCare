@@ -67,7 +67,7 @@ $dashboardUrl = match (current_role()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password - NovaCare</title>
-    <link rel="stylesheet" href="assets/css/auth.css">
+    <link rel="stylesheet" href="assets/css/login/auth.css">
 </head>
 <body>
     <header class="auth-navbar">

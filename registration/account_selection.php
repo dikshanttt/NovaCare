@@ -3,18 +3,22 @@ require_once __DIR__ . '/../include/bootstrap.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Selection - NovaCare</title>
-    <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="../assets/css/login/auth.css">
 </head>
+
 <body>
 
     <!-- Subnav / Back link -->
     <div class="auth-subnav">
         <a href="../index.php" class="auth-back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
             Back to NovaCare
         </a>
     </div>
@@ -34,39 +38,49 @@ require_once __DIR__ . '/../include/bootstrap.php';
                     <div class="role-card-header">
                         <div class="role-icon-circle">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
                             </svg>
                         </div>
                         <span class="role-category-tag">For Patients</span>
                     </div>
 
-                    <h2 class="role-card-heading">Find and book care with confidence.</h2>
-                    <p class="role-card-desc">Create a private patient profile to discover trusted care and manage every appointment in one place.</p>
+                    <h2 class="role-card-heading">Find the care you need.</h2>
+                    <p class="role-card-desc">Create your patient account to find doctors, book appointments, and keep track of your visits in one place.</p>
 
                     <ul class="role-features-list">
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Search verified doctors and hospitals</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Find doctors by specialty</span>
                         </li>
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Book, reschedule, or cancel anytime</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Book appointments online</span>
                         </li>
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Keep visit details and reminders together</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Manage your booked appointments</span>
                         </li>
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Your health information stays protected</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Receive appointment status updates</span>
                         </li>
                     </ul>
                 </div>
 
                 <a href="patient_registration.php" class="role-btn">
                     <span>Register as a patient</span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
 
@@ -76,40 +90,53 @@ require_once __DIR__ . '/../include/bootstrap.php';
                     <div class="role-card-header">
                         <div class="role-icon-circle">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/>
-                                <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/>
-                                <circle cx="20" cy="10" r="2"/>
+                                <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3" />
+                                <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4" />
+                                <circle cx="20" cy="10" r="2" />
                             </svg>
                         </div>
                         <span class="role-category-tag">For Doctors</span>
                     </div>
 
-                    <h2 class="role-card-heading">Bring your practice closer to patients.</h2>
-                    <p class="role-card-desc">Join our verified provider network and offer a simpler, more thoughtful booking experience.</p>
+                    <h2 class="role-card-heading">Manage your appointments easily.</h2>
+                    <p class="role-card-desc">Create your doctor profile, manage appointment requests, and view patient details through one dashboard.</p>
 
                     <ul class="role-features-list">
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Create a trusted professional profile</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Register as a doctor</span>
                         </li>
+
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Set services and live availability</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Await admin account verification</span>
                         </li>
+
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Manage requests from one dashboard</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Create your available schedule</span>
                         </li>
+
                         <li class="role-feature-item">
-                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Grow visibility with the right patients</span>
+                            <svg class="role-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Update your schedule anytime</span>
                         </li>
                     </ul>
                 </div>
 
                 <a href="doctor_registration.php" class="role-btn">
                     <span>Register as a doctor</span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
 
@@ -153,8 +180,8 @@ require_once __DIR__ . '/../include/bootstrap.php';
         <div class="trust-banner-inner">
             <div class="trust-shield-icon">
                 <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <path d="m9 12 2 2 4-4"/>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="m9 12 2 2 4-4" />
                 </svg>
             </div>
 
@@ -165,16 +192,24 @@ require_once __DIR__ . '/../include/bootstrap.php';
 
             <ul class="trust-checklist">
                 <li class="trust-checklist-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>HIPAA-ready security</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Secure account access</span>
                 </li>
+
                 <li class="trust-checklist-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Verified providers</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Verified doctors</span>
                 </li>
+
                 <li class="trust-checklist-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Human support</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Easy appointment booking</span>
                 </li>
             </ul>
         </div>
@@ -188,16 +223,17 @@ require_once __DIR__ . '/../include/bootstrap.php';
             </div>
 
             <div class="footer-support-text">
-                Need help? +1 800 682 2273 &bull; Mon&ndash;Sat, 9am&ndash;8pm
+                Need help? +977 982-72977 &bull; Mon&ndash;Sat, 9am&ndash;8pm
             </div>
 
             <div class="footer-badges">
                 <span>Secure care coordination</span>
                 <span>&bull;</span>
-                <span>HIPAA-ready</span>
+                <span>Privacy focused</span>
             </div>
         </div>
     </footer>
 
 </body>
+
 </html>

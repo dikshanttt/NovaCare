@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - NovaCare</title>
-    <link rel="stylesheet" href="assets/css/auth.css">
+    <link rel="stylesheet" href="assets/css/login/auth.css">
 </head>
 <body>
 
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Left Visual Card -->
             <div class="auth-hero-visual">
-                <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1000&q=80" alt="Doctor and patient consultation" class="auth-hero-bg">
+                <img src="./assets/img/login.jpg" alt="Doctor and patient consultation" class="auth-hero-bg">
                 <div class="auth-hero-overlay"></div>
 
                 <div class="auth-hero-content">
@@ -199,8 +199,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </svg>
                     </div>
                     <div class="auth-badge-text">
-                        <h4>Private by design</h4>
-                        <p>HIPAA-ready security protects your personal health information every step of the way.</p>
+                        <h4>Trusted healthcare access</h4>
+                        <p>Designed to safeguard your personal information throughout your healthcare journey.</p>
                     </div>
                 </div>
             </div>
@@ -326,13 +326,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="footer-support-text">
-                Need help? +1 800 682 2273 &bull; Mon&ndash;Sat, 9am&ndash;8pm
+                Need help? +977 982-7012977 &bull; Mon&ndash;Sat, 9am&ndash;8pm
             </div>
 
             <div class="footer-badges">
                 <span>Secure care coordination</span>
                 <span>&bull;</span>
-                <span>HIPAA-ready</span>
+                <span>Privacy focused</span>
             </div>
         </div>
     </footer>

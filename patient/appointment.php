@@ -125,138 +125,9 @@ $verifiedDoctors = $doctorsStmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book an Appointment - NovaCare</title>
-    <link rel="stylesheet" href="../assets/css/auth.css">
-    <style>
-        .patient-nav-user {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 13.5px;
-        }
-        .user-avatar-circle {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: var(--cherry);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-        @media (max-width: 600px) {
-            .auth-navbar {
-                height: auto;
-                padding: 12px 4%;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            .patient-nav-user {
-                display: none !important;
-            }
-            .portal-nav-toggle { display: flex; }
-        }
-
-        /* Hamburger Toggle Button */
-        .portal-nav-toggle {
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            gap: 5px;
-            width: 38px;
-            height: 38px;
-            background: transparent;
-            border: 1px solid #ddd8ca;
-            border-radius: 10px;
-            cursor: pointer;
-            padding: 8px;
-            transition: background 0.2s;
-            flex-shrink: 0;
-        }
-        .portal-nav-toggle:hover { background: var(--oat); }
-        .portal-nav-toggle span {
-            display: block;
-            width: 100%;
-            height: 2px;
-            background: var(--black);
-            border-radius: 2px;
-        }
-
-        .portal-nav-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            background: rgba(0,0,0,0.45);
-            backdrop-filter: blur(3px);
-        }
-        .portal-nav-overlay.open { display: block; }
-
-        .portal-mobile-drawer {
-            position: fixed;
-            top: 0; right: 0; bottom: 0;
-            width: min(300px, 85vw);
-            background: var(--light-oat, #faf8f5);
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-            padding: 24px 20px 32px;
-            box-shadow: -8px 0 30px rgba(0,0,0,0.15);
-            transform: translateX(105%);
-            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
-        }
-        .portal-mobile-drawer.open { transform: translateX(0); }
-
-        .portal-drawer-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 18px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #ddd8ca;
-        }
-        .portal-drawer-header .auth-logo { font-size: 16px; }
-        .portal-drawer-close {
-            background: none; border: none;
-            font-size: 28px; line-height: 1;
-            cursor: pointer; color: var(--gray);
-            padding: 4px 8px; border-radius: 8px;
-        }
-        .portal-drawer-close:hover { color: var(--cherry); background: var(--oat); }
-
-        .portal-drawer-user {
-            display: flex; align-items: center; gap: 12px;
-            padding: 14px 0; margin-bottom: 8px;
-            border-bottom: 1px solid rgba(221,216,202,0.5);
-        }
-        .portal-drawer-user .avatar {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--cherry); color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 16px; flex-shrink: 0;
-        }
-        .portal-drawer-user .name { font-weight: 600; font-size: 14px; color: var(--black); }
-
-        .portal-mobile-drawer a,
-        .portal-mobile-drawer button.drawer-link {
-            display: block; padding: 13px 12px;
-            font-size: 15px; font-weight: 600;
-            color: var(--black); text-decoration: none;
-            border-radius: 10px;
-            border-bottom: 1px solid rgba(221,216,202,0.5);
-            background: none; border-left: none; border-right: none; border-top: none;
-            width: 100%; text-align: left; cursor: pointer; font-family: inherit;
-        }
-        .portal-mobile-drawer a:hover,
-        .portal-mobile-drawer button.drawer-link:hover { background: var(--oat); }
-
-        .portal-mobile-drawer .drawer-signout {
-            margin-top: auto; padding-top: 20px;
-            border-top: 1px solid #ddd8ca;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/login/auth.css">
+    <link rel="stylesheet" href="../assets/css/patient/appointment.css">
+    <link rel="stylesheet" href="../assets/css/patient/patient.css">
 </head>
 <body>
 
@@ -445,12 +316,12 @@ $verifiedDoctors = $doctorsStmt->fetchAll();
                 <span>+</span>NovaCare
             </div>
             <div class="footer-support-text">
-                Need help with booking? +1 800 682 2273 &bull; Mon&ndash;Sat, 9am&ndash;8pm
+                Need help with booking? +977 982-72977 &bull; Mon&ndash;Sat, 9am&ndash;8pm
             </div>
             <div class="footer-badges">
                 <span>Secure care coordination</span>
                 <span>&bull;</span>
-                <span>HIPAA-ready</span>
+                <span>Privacy focused</span>
             </div>
         </div>
     </footer>
