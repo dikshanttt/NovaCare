@@ -34,10 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errorMessage = 'Your current password is incorrect.';
             } else {
                 $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
-                $update = $db->prepare('UPDATE users SET password_hash = ?, force_password_change = FALSE WHERE id = ?');
+                $update = $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
                 $update->execute([$passwordHash, current_user_id()]);
 
-                $_SESSION['force_password_change'] = false;
                 session_regenerate_id(true);
                 unset($_SESSION['csrf_token'], $_SESSION['csrf_token_created_at']);
 
@@ -55,6 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$dashboardUrl = match (current_role()) {
+    'admin' => 'admin/dashboard.php',
+    'doctor' => 'doctor/dashboard.php',
+    default => 'patient/dashboard.php',
+};
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <header class="auth-navbar">
         <a href="index.php" class="auth-logo"><span class="auth-logo-badge">+</span>NovaCare</a>
+        <a href="<?= htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') ?>" style="color: #64748b; font-size: 0.9rem; text-decoration: none; font-weight: 500;">&larr; Back to Dashboard</a>
     </header>
 
     <main class="auth-main-container" style="max-width: 620px;">
@@ -98,6 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <button type="submit" class="btn-auth-submit"><span>Update password</span></button>
             </form>
+
+            <p class="auth-card-foot" style="margin-top: 1.25rem;">
+                <a href="<?= htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') ?>" style="color: #64748b;">Return to Dashboard</a>
+            </p>
         </section>
     </main>
 </body>

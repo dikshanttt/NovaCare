@@ -19,6 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $db->beginTransaction();
         try {
+            // Fetch doctor details for email notification
+            $docInfoStmt = $db->prepare("SELECT d.name, d.doctor_login_id, u.email FROM doctors d JOIN users u ON u.id = d.user_id WHERE d.user_id = ?");
+            $docInfoStmt->execute([$doctorId]);
+            $docInfo = $docInfoStmt->fetch();
+
+            require_once __DIR__ . '/../include/phpmailer.php';
+
             if ($action === 'approve') {
                 $stmt = $db->prepare("
                     UPDATE doctors
@@ -31,7 +38,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $db->prepare("UPDATE users SET status = 'active' WHERE id = ?")->execute([$doctorId]);
 
-                set_flash('success', 'Doctor verified successfully.');
+                $db->commit();
+
+                if ($docInfo && !empty($docInfo['email'])) {
+                    $apprSubject = 'NovaCare - Account Verified';
+                    $apprBody = "Hello Dr. {$docInfo['name']},\n\n"
+                        . "Congratulations! Your doctor profile has been verified and activated by our administration team.\n\n"
+                        . "You can now log in using your Doctor Login ID: {$docInfo['doctor_login_id']}\n"
+                        . "Login page: " . base_path() . "/login.php\n\n"
+                        . "Best regards,\nNovaCare Healthcare Network";
+                    send_email($docInfo['email'], $apprSubject, $apprBody);
+                }
+
+                set_flash('success', 'Doctor verified successfully and notification email sent.');
             } else {
                 $reason = clean($_POST['rejection_reason'] ?? 'Application does not meet requirements.');
 
@@ -46,9 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $db->prepare("UPDATE users SET status = 'rejected' WHERE id = ?")->execute([$doctorId]);
 
-                set_flash('success', 'Doctor application rejected.');
+                $db->commit();
+
+                if ($docInfo && !empty($docInfo['email'])) {
+                    send_doctor_rejected_email($docInfo['email'], $docInfo['name'], $reason);
+                }
+
+                set_flash('success', 'Doctor application rejected and notification email sent.');
             }
-            $db->commit();
         } catch (Exception $e) {
             $db->rollBack();
             set_flash('error', 'An error occurred: ' . $e->getMessage());

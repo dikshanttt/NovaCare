@@ -55,7 +55,7 @@ function require_login(array $allowedRoles = []): void
      * Verifying the logged-in user against the database.
      */
     $stmt = getDB()->prepare(
-        'SELECT role, status, force_password_change
+        'SELECT role, status
          FROM users
          WHERE id = ?'
     );
@@ -78,12 +78,6 @@ function require_login(array $allowedRoles = []): void
     }
 
     /*
-     * Storing the force_password_change flag in the session.
-     */
-    $_SESSION['force_password_change'] =
-        (bool) $user['force_password_change'];
-
-    /*
      * Check role authorization.
      * Only admin users can continue.
      */
@@ -93,20 +87,6 @@ function require_login(array $allowedRoles = []): void
     ) {
         http_response_code(403);
         die('You do not have permission to view this page.');
-    }
-
-    /*
-     * If the user logged in using a temporary password,
-     * forcing them to change it before accessing other pages.
-     */
-
-    if (!empty($_SESSION['force_password_change'])) {
-
-        $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
-
-        if ($currentPage !== 'change-password.php') {
-            redirect('/change-password.php');
-        }
     }
 }
 
@@ -143,14 +123,6 @@ function current_role(): ?string
     return $_SESSION['role'] ?? null;
 }
 
-/**
- * Check whether the logged-in user must change their password.
- */
-function must_change_password(): bool
-{
-    return !empty($_SESSION['force_password_change']);
-}
-
 /*
 |--------------------------------------------------------------------------
 | Login / Logout
@@ -162,8 +134,7 @@ function must_change_password(): bool
  */
 function login_user(
     int $userId,
-    string $role,
-    bool $forcePasswordChange = false
+    string $role
 ): void {
     /*
      * Prevent session fixation attacks.
@@ -173,7 +144,6 @@ function login_user(
 
     $_SESSION['user_id'] = $userId;
     $_SESSION['role'] = $role;
-    $_SESSION['force_password_change'] = $forcePasswordChange;
     $_SESSION['last_activity'] = time();
 }
 

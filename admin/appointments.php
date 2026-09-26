@@ -41,9 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmtUpd->execute([$appId]);
 
+                require_once __DIR__ . '/../include/phpmailer.php';
+                if (!empty($app['patient_email'])) {
+                    send_appointment_status_to_patient($app['patient_email'], $app, 'confirmed');
+                }
+
                 set_flash(
                     'success',
-                    "Appointment #{$app['appointment_token']} confirmed successfully."
+                    "Appointment #{$app['appointment_token']} confirmed successfully and notification sent to patient."
                 );
 
             } elseif ($action === 'reject_appointment') {
@@ -62,9 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmtUpd->execute([$reason, $appId]);
 
+                require_once __DIR__ . '/../include/phpmailer.php';
+                if (!empty($app['patient_email'])) {
+                    send_appointment_status_to_patient($app['patient_email'], $app, 'rejected_by_hospital', $reason);
+                }
+
                 set_flash(
                     'success',
-                    "Appointment #{$app['appointment_token']} marked as rejected."
+                    "Appointment #{$app['appointment_token']} marked as rejected and notification sent to patient."
                 );
             }
         }

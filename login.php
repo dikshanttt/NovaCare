@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($selectedRole === 'doctor') {
                 // Doctors can log in via email OR doctor_login_id
                 $stmt = $db->prepare("
-                    SELECT u.id, u.email, u.password_hash, u.role, u.status, u.force_password_change,
+                    SELECT u.id, u.email, u.password_hash, u.role, u.status,
                            d.doctor_login_id, d.verification_status, d.name
                     FROM users u
                     JOIN doctors d ON d.user_id = u.id
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Patients and Admins log in via email
                 $stmt = $db->prepare("
-                    SELECT u.id, u.email, u.password_hash, u.role, u.status, u.force_password_change
+                    SELECT u.id, u.email, u.password_hash, u.role, u.status
                     FROM users u
                     WHERE LOWER(u.email) = LOWER(?)
                     LIMIT 1
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Universal Admin Fallback: If entered email is an admin, accept under any tab
             if (!$user) {
                 $admStmt = $db->prepare("
-                    SELECT u.id, u.email, u.password_hash, u.role, u.status, u.force_password_change
+                    SELECT u.id, u.email, u.password_hash, u.role, u.status
                     FROM users u
                     WHERE LOWER(u.email) = LOWER(?) AND u.role = 'admin'
                     LIMIT 1
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     // Valid credentials and active status
                     unset($_SESSION['login_attempts']);
-                    login_user((int) $user['id'], $user['role'], (bool) $user['force_password_change']);
+                    login_user((int) $user['id'], $user['role']);
 
                     if ($user['role'] === 'doctor') {
                         redirect('doctor/dashboard.php');
@@ -174,14 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </header>
 
-    <!-- Subnav Breadcrumb -->
-    <div class="auth-subnav">
-        <a href="index.php" class="auth-back-link">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Back to NovaCare
-        </a>
-        <span class="auth-breadcrumb-current">/ Sign in</span>
-    </div>
+
 
     <!-- Main Content: Split Grid Layout -->
     <main class="auth-main-container">

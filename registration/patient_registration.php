@@ -7,11 +7,11 @@ require_once __DIR__ . '/../include/function.php';
 if (is_logged_in()) {
     $role = current_role();
     if ($role === 'doctor') {
-        redirect('../doctor/dashboard.php');
+        redirect('doctor/dashboard.php');
     } elseif ($role === 'admin') {
-        redirect('../admin/dashboard.php');
+        redirect('admin/dashboard.php');
     } else {
-        redirect('../patient/dashboard.php');
+        redirect('patient/dashboard.php');
     }
 }
 
@@ -34,13 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $formData['name'] = trim($_POST['name'] ?? '');
     $formData['email'] = trim($_POST['email'] ?? '');
-    $formData['phone'] = trim($_POST['phone'] ?? '');
-    $formData['date_of_birth'] = trim($_POST['date_of_birth'] ?? '');
+    $formData['phone'] = substr(trim($_POST['phone'] ?? ''), 0, 20);
+    $rawDob = trim($_POST['date_of_birth'] ?? '');
+    $dobTime = strtotime($rawDob);
+    $formData['date_of_birth'] = ($dobTime !== false) ? date('Y-m-d', $dobTime) : $rawDob;
     $formData['gender'] = trim($_POST['gender'] ?? '');
     $formData['blood_group'] = trim($_POST['blood_group'] ?? '');
     $formData['address'] = trim($_POST['address'] ?? '');
     $formData['emergency_name'] = trim($_POST['emergency_name'] ?? '');
-    $formData['emergency_phone'] = trim($_POST['emergency_phone'] ?? '');
+    $formData['emergency_phone'] = substr(trim($_POST['emergency_phone'] ?? ''), 0, 20);
 
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
@@ -50,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errorMessage = 'Please fill in all required personal information fields.';
     } elseif (!filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
         $errorMessage = 'Please enter a valid email address.';
+    } elseif ($dobTime === false || $dobTime > time()) {
+        $errorMessage = 'Please enter a valid date of birth in the past.';
     } elseif (strlen($password) < 6) {
         $errorMessage = 'Password must be at least 6 characters long.';
     } elseif ($password !== $confirmPassword) {
@@ -97,11 +101,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $db->commit();
 
+                // Send welcome email to new patient
+                require_once __DIR__ . '/../include/phpmailer.php';
+                $welcomeSubject = 'Welcome to NovaCare!';
+                $welcomeBody = "Hello {$formData['name']},\n\n"
+                    . "Welcome to NovaCare! Your patient profile has been created successfully.\n\n"
+                    . "You can now book consultations with verified medical specialists and manage your appointments online.\n\n"
+                    . "Regards,\nNovaCare Healthcare Network";
+                send_email($formData['email'], $welcomeSubject, $welcomeBody);
+
                 // Log the patient in
                 login_user($userId, 'patient');
                 set_flash('success', 'Welcome to NovaCare! Your patient profile has been created successfully.');
 
-                redirect('../patient/dashboard.php');
+                redirect('patient/dashboard.php');
             }
 
         } catch (Throwable $e) {
@@ -109,7 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->rollBack();
             }
             error_log('Patient registration error: ' . $e->getMessage());
-            $errorMessage = 'An unexpected error occurred during registration. Please try again.';
+            if (str_contains($e->getMessage(), 'users_email_key') || str_contains($e->getMessage(), 'unique constraint')) {
+                $errorMessage = 'An account with this email address already exists. Please sign in instead.';
+            } elseif (str_contains($e->getMessage(), 'value too long for type character varying')) {
+                $errorMessage = 'One or more of the submitted fields exceeds the character limit.';
+            } else {
+                $errorMessage = 'Registration error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+            }
         }
     }
 }

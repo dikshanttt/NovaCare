@@ -1,5 +1,6 @@
 <?php
-// Load Composer's autoloader if available
+// Ensure dotenv and composer are loaded
+require_once __DIR__ . '/../config/config.php';
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
@@ -14,13 +15,14 @@ function send_email(string $to, string $subject, string $body): bool
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             
-            $mail->Username   = getenv('SMTP_USER') ?: 'dikshantlama77@gmail.com'; 
-            $mail->Password   = getenv('SMTP_PASS') ?: 'dikshant@123'; 
+            $mail->Username   = $_ENV['SMTP_USER'] ?? 'dikshantlama77@gmail.com'; 
+            $mail->Password   = str_replace(' ', '', $_ENV['SMTP_PASS'] ?? ''); 
             
             $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
+            $mail->CharSet    = 'UTF-8';
 
-            $mail->setFrom('dikshantlama77@gmail.com', 'HAMS Admin');
+            $mail->setFrom($_ENV['SMTP_USER'] ?? 'dikshantlama77@gmail.com', 'NovaCare');
             $mail->addAddress($to);
 
             $mail->isHTML(false);

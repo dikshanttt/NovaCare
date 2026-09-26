@@ -3,9 +3,22 @@ require_once __DIR__ . '/auth/auth.php';
 require_once __DIR__ . '/database/db.php';
 require_once __DIR__ . '/include/function.php';
 
-$isLoggedIn = is_logged_in();
-$userRole = current_role();
-$isPatient = $isLoggedIn && $userRole === 'patient';
+// Redirect authenticated users away from the public landing page to their respective dashboards
+if (is_logged_in()) {
+    $role = current_role();
+    if ($role === 'doctor') {
+        redirect('doctor/dashboard.php');
+    } elseif ($role === 'admin') {
+        redirect('admin/dashboard.php');
+    } else {
+        redirect('patient/dashboard.php');
+    }
+}
+
+// Guest user defaults
+$isLoggedIn = false;
+$userRole = null;
+$isPatient = false;
 $bookAppointmentUrl = 'patient/appointment.php';
 
 // ── Live stats from DB ────────────────────────────────────────────────────────
@@ -84,13 +97,35 @@ function doctorAvatar(?string $path): string {
         <span>+</span>NovaCare
     </div>
 
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#care">Hospitals</a>
-        <a href="#doctors">Doctors</a>
-        <a href="#works">How It Works</a>
-        <a href="#faq">FAQ</a>
-        <a href="#contact">Contact</a>
+    <div class="nav-overlay" id="navOverlay" onclick="closeNav()"></div>
+
+    <nav id="navbarMenu">
+        <div class="mobile-nav-header">
+            <div class="logo"><span>+</span>NovaCare</div>
+            <button class="nav-close" onclick="closeNav()" aria-label="Close menu">&times;</button>
+        </div>
+        <a href="#home" onclick="closeNav()">Home</a>
+        <a href="#care" onclick="closeNav()">Hospitals</a>
+        <a href="#doctors" onclick="closeNav()">Doctors</a>
+        <a href="#works" onclick="closeNav()">How It Works</a>
+        <a href="#faq" onclick="closeNav()">FAQ</a>
+        <a href="#contact" onclick="closeNav()">Contact</a>
+
+        <div class="mobile-nav-auth">
+            <?php if ($isLoggedIn): ?>
+                <?php if ($isPatient): ?>
+                    <a href="patient/dashboard.php" class="btn oat-btn" style="width:100%; text-align:center;">Dashboard</a>
+                    <a href="patient/appointment.php" class="btn cherry-btn" style="width:100%; text-align:center;">Book Appointment</a>
+                <?php elseif ($userRole === 'doctor'): ?>
+                    <a href="doctor/dashboard.php" class="btn oat-btn" style="width:100%; text-align:center;">Doctor Dashboard</a>
+                <?php elseif ($userRole === 'admin'): ?>
+                    <a href="admin/dashboard.php" class="btn oat-btn" style="width:100%; text-align:center;">Admin Panel</a>
+                <?php endif; ?>
+            <?php else: ?>
+                <a href="login.php" class="btn oat-btn" style="width:100%; text-align:center;">Sign In</a>
+                <a href="registration/account_selection.php" class="btn cherry-btn" style="width:100%; text-align:center;">Sign Up</a>
+            <?php endif; ?>
+        </div>
     </nav>
 
     <div class="nav-buttons">
@@ -120,6 +155,11 @@ function doctorAvatar(?string $path): string {
             <a href="registration/account_selection.php" class="login">Sign Up</a>
             <a href="<?= $bookAppointmentUrl ?>" class="btn cherry-btn">Book Appointment</a>
         <?php endif; ?>
+        <button class="nav-toggle" id="navToggle" onclick="toggleNav()" aria-label="Toggle Navigation">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
 </header>
 
@@ -283,7 +323,7 @@ function doctorAvatar(?string $path): string {
         <div class="add-icon">+</div>
         <h3>No doctors yet</h3>
         <p>Verified doctors will appear here once the admin approves them.</p>
-        <a href="registration/dotor_registration.php" class="btn cherry-btn">Register as Doctor</a>
+        <a href="registration/doctor_registration.php" class="btn cherry-btn">Register as Doctor</a>
     </div>
     <?php endif; ?>
 </section>
@@ -352,6 +392,30 @@ function doctorAvatar(?string $path): string {
         <a href="tel:+18006822273">+1 800 682 2273</a>
     </div>
 </footer>
+
+<script>
+function toggleNav() {
+    const nav = document.getElementById('navbarMenu');
+    const overlay = document.getElementById('navOverlay');
+    const isOpen = nav.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeNav() {
+    const nav = document.getElementById('navbarMenu');
+    const overlay = document.getElementById('navOverlay');
+    if (nav) nav.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 900) {
+        closeNav();
+    }
+});
+</script>
 
 </body>
 </html>

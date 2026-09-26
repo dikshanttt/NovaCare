@@ -7,11 +7,11 @@ require_once __DIR__ . '/../include/function.php';
 if (is_logged_in()) {
     $role = current_role();
     if ($role === 'doctor') {
-        redirect('../doctor/dashboard.php');
+        redirect('doctor/dashboard.php');
     } elseif ($role === 'admin') {
-        redirect('../admin/dashboard.php');
+        redirect('admin/dashboard.php');
     } else {
-        redirect('../patient/dashboard.php');
+        redirect('patient/dashboard.php');
     }
 }
 
@@ -119,6 +119,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $db->commit();
                         $registrationSuccess = true;
+
+                        // Send confirmation email
+                        require_once __DIR__ . '/../include/phpmailer.php';
+                        $emailSubject = 'NovaCare - Doctor Registration Received';
+                        $emailBody = "Hello Dr. {$formData['name']},\n\n"
+                            . "Thank you for registering with NovaCare.\n\n"
+                            . "Your assigned Doctor Login ID is: {$assignedDoctorId}\n"
+                            . "Status: Pending Administrative Verification\n\n"
+                            . "Our administrative team will review your medical credentials and license shortly. Once approved, you will be notified via email and will be able to log in to your provider dashboard.\n\n"
+                            . "Regards,\nNovaCare Healthcare Team";
+                        send_email($formData['email'], $emailSubject, $emailBody);
                     }
                 }
             }
@@ -128,7 +139,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->rollBack();
             }
             error_log('Doctor registration error: ' . $e->getMessage());
-            $errorMessage = 'An unexpected error occurred during doctor registration. Please try again.';
+            if (str_contains($e->getMessage(), 'users_email_key') || str_contains($e->getMessage(), 'unique constraint')) {
+                $errorMessage = 'An account with this email address already exists. Please sign in instead.';
+            } elseif (str_contains($e->getMessage(), 'doctors_license_no_key')) {
+                $errorMessage = 'A doctor profile with this medical license number is already registered.';
+            } elseif (str_contains($e->getMessage(), 'value too long for type character varying')) {
+                $errorMessage = 'One or more of the submitted fields exceeds the character limit.';
+            } else {
+                $errorMessage = 'Registration error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+            }
         }
     }
 }
