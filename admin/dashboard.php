@@ -223,7 +223,7 @@ $flash = get_flash();
                         </div>
                     </div>
 
-                    <a href="verify_doctors.php" class="priority-item">
+                    <a href="verify_doctor.php" class="priority-item">
                         <span class="priority-number blue">
                             <?= str_pad($pendingDoctors, 2, '0', STR_PAD_LEFT) ?>
                         </span>
@@ -234,7 +234,7 @@ $flash = get_flash();
                         <span>→</span>
                     </a>
 
-                    <a href="schedule_approvals.php" class="priority-item">
+                    <a href="schedule_approval.php" class="priority-item">
                         <span class="priority-number gold">
                             <?= str_pad($pendingSched, 2, '0', STR_PAD_LEFT) ?>
                         </span>
