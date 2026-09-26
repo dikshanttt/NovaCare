@@ -85,8 +85,8 @@ Before running the project, make sure you have:
 
 The database seed script creates a default admin user:
 
-- Email: `admin@example.com`
-- Password: `Password123!`
+- Email: `admin@novacare.com`
+- Password: `novacare_admin`
 
 ## Notes
 
