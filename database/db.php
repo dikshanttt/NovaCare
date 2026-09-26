@@ -23,7 +23,9 @@ function getDB(): PDO
         return $pdo;
 
     } catch (PDOException $e) {
-        error_log('HMS database connection failed: ' . $e->getMessage());
+        // Avoid logging connection details that could contain deployment information.
+        error_log('NovaCare database connection failed.');
+        http_response_code(503);
         die('Database connection failed. Please try again later.');
     }
-}   
+}

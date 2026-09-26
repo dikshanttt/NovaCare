@@ -31,6 +31,8 @@ $formData = [
 
 // Handle Doctor Registration Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+
     $formData['name'] = trim($_POST['name'] ?? '');
     $formData['email'] = trim($_POST['email'] ?? '');
     $formData['phone'] = trim($_POST['phone'] ?? '');
@@ -194,7 +196,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST" action="dotor_registration.php" enctype="multipart/form-data" autocomplete="on">
+                    <form method="POST" action="doctor_registration.php" enctype="multipart/form-data" autocomplete="on">
+                        <?= csrf_field() ?>
                         
                         <!-- Full Name -->
                         <div class="form-group">

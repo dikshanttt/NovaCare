@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/auth.php';
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../include/function.php';
 require_once __DIR__ . '/../config/config.php';
 require_login(['admin']);
 
@@ -11,7 +11,7 @@ $totalHospitals = (int)$db->query("SELECT COUNT(*) FROM hospitals WHERE is_activ
 $activeDoctors  = (int)$db->query("SELECT COUNT(DISTINCT d.user_id) FROM doctor_profiles d JOIN users u ON d.user_id = u.id WHERE d.verification_status = 'verified' AND u.status = 'active'")->fetchColumn();
 $pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctor_profiles WHERE verification_status = 'pending'")->fetchColumn();
 $pendingSched   = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status = 'pending_approval'")->fetchColumn();
-$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status = 'pending_hospital_approval'")->fetchColumn();
+$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status IN ('pending', 'pending_hospital_approval')")->fetchColumn();
 $confirmedApps  = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status = 'confirmed'")->fetchColumn();
 $totalPatients  = (int)$db->query("SELECT COUNT(*) FROM users WHERE role = 'patient'")->fetchColumn();
 
@@ -43,8 +43,8 @@ $recentAppsPreview = $db->query("
     SELECT a.*, p.name AS patient_name, dp.name AS doctor_name, h.name AS hospital_name
     FROM appointments a
     JOIN patient_profiles p ON p.user_id = a.patient_id
-    JOIN doctor_profiles dp ON dp.user_id = a.doctor_id
-    JOIN hospitals h ON h.id = a.hospital_id
+    LEFT JOIN doctor_profiles dp ON dp.user_id = a.doctor_id
+    LEFT JOIN hospitals h ON h.id = a.hospital_id
     ORDER BY a.created_at DESC
     LIMIT 5
 ")->fetchAll();
@@ -87,28 +87,29 @@ $flash = get_flash();
             <div class="sidebar-section-title">Workspace</div>
 
             <nav class="adm-nav">
-                <a class="active" href="dashobard.php">
+                <a class="active" href="dashboard.php">
                     <span class="nav-icon">⊞</span>
                     <span>Overview</span>
                 </a>
-                <a href="hospitals.html">
+                <a href="hospitals.php">
                     <span class="nav-icon">🏥</span>
                     <span>Manage Hospitals</span>
                 </a>
-                <a href="verify_doctor.html">
+                <a href="verify_doctor.php">
                     <span class="nav-icon">🩺</span>
                     <span>Verify &amp; Affiliations</span>
                     <?php if ($pendingDoctors > 0): ?><span class="adm-badge"><?= $pendingDoctors ?></span><?php endif; ?>
                 </a>
-                <a href="schedule_approval.html">
+                <a href="schedule_approval.php">
                     <span class="nav-icon">📅</span>
                     <span>Schedule Approvals</span>
                     <?php if ($pendingSched > 0): ?><span class="adm-badge"><?= $pendingSched ?></span><?php endif; ?>
                 </a>
-                <a href="appointments.html">
+                <a href="appointments.php">
                     <span class="nav-icon">📋</span>
                     <span>Appointments</span>
-                    <?php if ($pendingApps > 0): ?><span class="adm-badge" style="background:#0369a1;color:#fff"><?= $pendingApps ?></span><?php endif; ?> </a>
+                    <?php if ($pendingApps > 0): ?><span class="adm-badge" style="background:#0369a1;color:#fff"><?= $pendingApps ?></span><?php endif; ?>
+                </a>
             </nav>
 
             <div class="sidebar-bottom">
@@ -119,10 +120,13 @@ $flash = get_flash();
                         <small>All systems operational</small>
                     </div>
                 </div>
-                <a class="signout-link" href="../login.html">
-                    <span class="nav-icon">↩</span>
-                    Sign Out
-                </a>
+                <form method="POST" action="../logout.php" style="margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="signout-link" style="width:100%; border:0; background:transparent; cursor:pointer; text-align:left;">
+                        <span class="nav-icon">↩</span>
+                        Sign Out
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -165,7 +169,7 @@ $flash = get_flash();
                         <h1>Good morning, Admin.</h1>
                         <p class="welcome-text">Here is the current activity across the hospital network.</p>
                     </div>
-                    <a href="appointments.html" class="overview-button">View appointments <span>→</span></a>
+                    <a href="appointments.php" class="overview-button">View appointments <span>→</span></a>
                 </section>
 
                 <section class="metric-grid">
@@ -219,7 +223,7 @@ $flash = get_flash();
                         </div>
                     </div>
 
-                    <a href="verify_doctors.html" class="priority-item">
+                    <a href="verify_doctors.php" class="priority-item">
                         <span class="priority-number blue">
                             <?= str_pad($pendingDoctors, 2, '0', STR_PAD_LEFT) ?>
                         </span>
@@ -230,7 +234,7 @@ $flash = get_flash();
                         <span>→</span>
                     </a>
 
-                    <a href="schedule_approvals.html" class="priority-item">
+                    <a href="schedule_approvals.php" class="priority-item">
                         <span class="priority-number gold">
                             <?= str_pad($pendingSched, 2, '0', STR_PAD_LEFT) ?>
                         </span>
@@ -250,7 +254,7 @@ $flash = get_flash();
                                 <h2>Recent Appointment Requests</h2>
                                 <small>Latest bookings across the hospital network</small>
                             </div>
-                            <a href="appointments.html" class="panel-link">View all <span>→</span></a>
+                            <a href="appointments.php" class="panel-link">View all <span>→</span></a>
                         </div>
 
                         <div class="table-wrap">

@@ -1,69 +1,69 @@
 <?php
 require_once __DIR__ . '/../auth/auth.php';
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../include/function.php';
 require_once __DIR__ . '/../config/config.php';
 require_login(['admin']);
 
 $db = getDB();
 $flash = get_flash();
 
-/* ---------- APPROVE / REJECT DOCTOR ---------- */
+/* ---------- POST ACTIONS ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
-    $action   = $_POST['action'] ?? '';
-    $doctorId = (int)($_POST['doctor_id'] ?? 0);
+    $action     = $_POST['action'] ?? '';
+    $hospitalId = (int)($_POST['hospital_id'] ?? 0);
 
-    if ($doctorId > 0 && in_array($action, ['approve', 'reject'], true)) {
-        $newStatus = $action === 'approve' ? 'verified' : 'rejected';
-
+    if ($action === 'toggle_status' && $hospitalId > 0) {
         $stmt = $db->prepare("
-            UPDATE doctor_profiles
-            SET verification_status = ?, verified_at = CURRENT_TIMESTAMP
-            WHERE user_id = ? AND verification_status = 'pending'
+            UPDATE hospitals
+            SET is_active = NOT is_active
+            WHERE id = ?
         ");
-        $stmt->execute([$newStatus, $doctorId]);
+        $stmt->execute([$hospitalId]);
+        set_flash('success', 'Hospital status updated successfully.');
 
-        if ($action === 'approve') {
-            $db->prepare("UPDATE users SET status = 'active' WHERE id = ?")->execute([$doctorId]);
+    } elseif ($action === 'add_hospital') {
+        $name        = clean($_POST['name'] ?? '');
+        $address     = clean($_POST['address'] ?? '');
+        $phone       = clean($_POST['phone'] ?? '');
+        $email       = clean($_POST['email'] ?? '');
+        $emergency   = clean($_POST['emergency_phone'] ?? '');
+        $departments = clean($_POST['departments'] ?? '');
+        $description = clean($_POST['description'] ?? '');
+
+        if ($name && $address && $phone && $email) {
+            $stmt = $db->prepare("
+                INSERT INTO hospitals (name, address, phone, email, emergency_phone, departments, description, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)
+            ");
+            $stmt->execute([$name, $address, $phone, $email, $emergency, $departments, $description]);
+            set_flash('success', 'New hospital added successfully.');
+        } else {
+            set_flash('error', 'Please fill in all required fields (Name, Address, Phone, Email).');
         }
-
-        set_flash(
-            'success',
-            $action === 'approve'
-                ? 'Doctor verified successfully.'
-                : 'Doctor application rejected.'
-        );
     }
 
-    redirect('/admin/verify_doctors.php');
+    redirect('/admin/hospitals.php');
 }
 
 /* ---------- STATS ---------- */
-$pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctor_profiles WHERE verification_status = 'pending'")->fetchColumn();
-$pendingSched   = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status = 'pending_approval'")->fetchColumn();
-$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status = 'pending_hospital_approval'")->fetchColumn();
-$affiliationCount = (int)$db->query("
-    SELECT COUNT(*) FROM doctor_hospital WHERE status = 'pending'
-")->fetchColumn();
+$totalHospitals    = (int)$db->query("SELECT COUNT(*) FROM hospitals")->fetchColumn();
+$activeHospitals   = (int)$db->query("SELECT COUNT(*) FROM hospitals WHERE is_active = TRUE")->fetchColumn();
+$inactiveHospitals = $totalHospitals - $activeHospitals;
+$affiliatedDoctors = (int)$db->query("SELECT COUNT(DISTINCT doctor_id) FROM doctor_hospital WHERE status = 'active'")->fetchColumn();
 
-/* ---------- PENDING DOCTORS ---------- */
-$pendingList = $db->query("
-    SELECT
-        dp.user_id,
-        dp.name,
-        dp.specialty,
-        dp.verification_status,
-        dp.created_at,
-        u.email,
-        h.name AS hospital_name,
-        h.address AS hospital_address
-    FROM doctor_profiles dp
-    JOIN users u ON u.id = dp.user_id
-    LEFT JOIN doctor_hospital dh ON dh.doctor_id = dp.user_id AND dh.status IN ('pending', 'active')
-    LEFT JOIN hospitals h ON h.id = dh.hospital_id
-    WHERE dp.verification_status = 'pending'
-    ORDER BY dp.created_at ASC
+/* sidebar badge counts */
+$pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctors WHERE verification_status = 'pending'")->fetchColumn();
+$pendingSched   = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status = 'pending_approval'")->fetchColumn();
+$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status IN ('pending','pending_hospital_approval')")->fetchColumn();
+
+/* ---------- HOSPITAL LIST ---------- */
+$hospitals = $db->query("
+    SELECT h.*,
+           (SELECT COUNT(*) FROM doctor_hospital dh WHERE dh.hospital_id = h.id AND dh.status = 'active') AS doctor_count
+    FROM hospitals h
+    ORDER BY h.is_active DESC, h.name ASC
 ")->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -72,12 +72,12 @@ $pendingList = $db->query("
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify &amp; Affiliations | HAMS Console</title>
+    <title>Manage Hospitals | HAMS Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/admin/admin_style.css">
-    <link rel="stylesheet" href="../assets/css/admin/verify_doctor.css">
+    <link rel="stylesheet" href="../assets/css/admin/hospitals.css">
 </head>
 
 <body class="admin-page">
@@ -104,11 +104,11 @@ $pendingList = $db->query("
                     <span class="nav-icon">⊞</span>
                     <span>Overview</span>
                 </a>
-                <a href="hospitals.php">
+                <a class="active" href="hospitals.php">
                     <span class="nav-icon">🏥</span>
                     <span>Manage Hospitals</span>
                 </a>
-                <a class="active" href="verify_doctors.php">
+                <a href="verify_doctor.php">
                     <span class="nav-icon">🩺</span>
                     <span>Verify &amp; Affiliations</span>
                     <?php if ($pendingDoctors > 0): ?>
@@ -139,10 +139,13 @@ $pendingList = $db->query("
                         <small>All systems operational</small>
                     </div>
                 </div>
-                <a class="signout-link" href="../logout.php">
-                    <span class="nav-icon">↩</span>
-                    Sign Out
-                </a>
+                <form method="POST" action="../logout.php" style="margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="signout-link" style="width:100%; border:0; background:transparent; cursor:pointer; text-align:left;">
+                        <span class="nav-icon">↩</span>
+                        Sign Out
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -153,13 +156,13 @@ $pendingList = $db->query("
                 <div class="breadcrumb">
                     <span>HAMS</span>
                     <b>/</b>
-                    <strong>Verify Doctors</strong>
+                    <strong>Manage Hospitals</strong>
                 </div>
 
                 <div class="topbar-right">
                     <div class="topbar-search">
                         <span class="search-icon">⌕</span>
-                        <input type="text" placeholder="Search doctors..." aria-label="Search">
+                        <input type="text" id="hospitalSearchInput" placeholder="Search hospitals..." aria-label="Search hospitals">
                     </div>
                     <button class="topbar-icon-btn" aria-label="Notifications">
                         ♧
@@ -178,9 +181,9 @@ $pendingList = $db->query("
             <div class="adm-body">
                 <section class="welcome-row">
                     <div>
-                        <p class="eyebrow">Credentials &amp; Affiliations</p>
-                        <h1>Verify Doctors</h1>
-                        <p class="welcome-text">Review medical licenses and hospital affiliations pending approval.</p>
+                        <p class="eyebrow">Hospital Network</p>
+                        <h1>Manage Hospitals</h1>
+                        <p class="welcome-text">View, add, and manage partner hospitals in the NovaCare network.</p>
                     </div>
                 </section>
 
@@ -190,98 +193,131 @@ $pendingList = $db->query("
                     </div>
                 <?php endif; ?>
 
-                <section class="priority-strip verify-priority">
-                    <div class="priority-title">
-                        <span class="priority-mark">!</span>
-                        <div>
-                            <strong><?= $pendingDoctors ?> application<?= $pendingDoctors !== 1 ? 's' : '' ?></strong>
-                            <small>Awaiting license verification</small>
+                <section class="metric-grid hospitals-metrics">
+                    <article class="metric-card">
+                        <div class="metric-icon blue">🏥</div>
+                        <div class="metric-copy">
+                            <span>Total</span>
+                            <strong><?= $totalHospitals ?></strong>
+                            <small>Registered hospitals</small>
                         </div>
-                    </div>
-                    <div class="priority-item static">
-                        <span class="priority-number blue"><?= str_pad((string)$affiliationCount, 2, '0', STR_PAD_LEFT) ?></span>
-                        <div>
-                            <strong>New affiliations</strong>
-                            <small>Hospital link requests</small>
+                    </article>
+                    <article class="metric-card">
+                        <div class="metric-icon green">✓</div>
+                        <div class="metric-copy">
+                            <span>Active</span>
+                            <strong><?= $activeHospitals ?></strong>
+                            <small>Currently operational</small>
                         </div>
-                    </div>
-                    <div class="priority-item static">
-                        <span class="priority-number gold"><?= str_pad((string)$pendingDoctors, 2, '0', STR_PAD_LEFT) ?></span>
-                        <div>
-                            <strong>Pending review</strong>
-                            <small>Doctor applications in queue</small>
+                    </article>
+                    <article class="metric-card">
+                        <div class="metric-icon gold">⏸</div>
+                        <div class="metric-copy">
+                            <span>Inactive</span>
+                            <strong><?= $inactiveHospitals ?></strong>
+                            <small>Temporarily paused</small>
                         </div>
-                    </div>
+                    </article>
+                    <article class="metric-card">
+                        <div class="metric-icon teal">🩺</div>
+                        <div class="metric-copy">
+                            <span>Doctors</span>
+                            <strong><?= $affiliatedDoctors ?></strong>
+                            <small>Affiliated physicians</small>
+                        </div>
+                    </article>
                 </section>
 
-                <section class="panel verify-panel">
+                <!-- Hospital List Panel -->
+                <section class="panel hospital-panel">
                     <div class="panel-head">
                         <div>
-                            <span class="panel-kicker">QUEUE</span>
-                            <h2>Pending Verification</h2>
-                            <small>Doctor applications requiring review</small>
+                            <span class="panel-kicker">NETWORK</span>
+                            <h2>All Hospitals</h2>
+                            <small>Partner hospitals in the NovaCare network</small>
+                        </div>
+                        <div class="panel-actions">
+                            <button type="button" class="btn-primary" onclick="openHospitalModal()">
+                                <span style="font-size: 1.1em; line-height: 1;">+</span> Add Hospital
+                            </button>
                         </div>
                     </div>
 
                     <div class="table-wrap">
-                        <table class="adm-table">
+                        <table class="adm-table" id="hospitalsTable">
                             <thead>
                                 <tr>
-                                    <th>Doctor</th>
-                                    <th>Specialty</th>
                                     <th>Hospital</th>
-                                    <th>Submitted</th>
-                                    <th>Type</th>
+                                    <th>Contact</th>
+                                    <th>Departments</th>
+                                    <th>Doctors</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($pendingList)): ?>
-                                    <tr>
-                                        <td colspan="6" style="text-align:center;padding:40px;">
-                                            No pending doctor applications.
+                                <?php if (empty($hospitals)): ?>
+                                    <tr class="empty-row">
+                                        <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">
+                                            No hospitals registered yet. Click <strong>+ Add Hospital</strong> to register one.
                                         </td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($pendingList as $doc): ?>
+                                    <?php foreach ($hospitals as $h): ?>
                                         <?php
-                                        $initials = strtoupper(substr($doc['name'] ?? 'DR', 0, 2));
-                                        $submitted = !empty($doc['created_at'])
-                                            ? date('M j', strtotime($doc['created_at']))
-                                            : '—';
+                                        $initials = strtoupper(substr($h['name'] ?? 'H', 0, 2));
+                                        $deptRaw  = trim($h['departments'] ?? '');
+                                        $deptList = $deptRaw !== '' ? array_filter(array_map('trim', explode(',', $deptRaw))) : [];
+                                        $deptCount = count($deptList);
                                         ?>
-                                        <tr>
+                                        <tr class="hospital-row">
                                             <td>
                                                 <div class="person-cell">
-                                                    <span class="mini-avatar doctor-av"><?= htmlspecialchars($initials) ?></span>
+                                                    <span class="mini-avatar hospital-av"><?= htmlspecialchars($initials) ?></span>
                                                     <div>
-                                                        <strong><?= htmlspecialchars($doc['name']) ?></strong>
-                                                        <small><?= htmlspecialchars($doc['email']) ?></small>
+                                                        <strong class="hospital-name"><?= htmlspecialchars($h['name']) ?></strong>
+                                                        <small class="hospital-address"><?= htmlspecialchars($h['address']) ?></small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td><?= htmlspecialchars($doc['specialty'] ?? '—') ?></td>
                                             <td>
-                                                <strong><?= htmlspecialchars($doc['hospital_name'] ?? 'Not linked') ?></strong>
-                                                <?php if (!empty($doc['hospital_address'])): ?>
-                                                    <small class="muted-block"><?= htmlspecialchars($doc['hospital_address']) ?></small>
+                                                <strong><?= htmlspecialchars($h['phone']) ?></strong>
+                                                <small class="muted-block"><?= htmlspecialchars($h['email']) ?></small>
+                                            </td>
+                                            <td>
+                                                <?php if ($deptCount > 0): ?>
+                                                    <span class="count-pill"><?= $deptCount ?> dept<?= $deptCount !== 1 ? 's' : '' ?></span>
+                                                    <div class="dept-tags">
+                                                        <?php foreach (array_slice($deptList, 0, 3) as $dName): ?>
+                                                            <span class="dept-tag"><?= htmlspecialchars($dName) ?></span>
+                                                        <?php endforeach; ?>
+                                                        <?php if ($deptCount > 3): ?>
+                                                            <span class="dept-tag">+<?= $deptCount - 3 ?> more</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <span class="muted-block">—</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><span class="date-cell"><?= htmlspecialchars($submitted) ?></span></td>
-                                            <td><span class="type-tag new">New registration</span></td>
+                                            <td>
+                                                <strong><?= (int)$h['doctor_count'] ?></strong>
+                                            </td>
+                                            <td>
+                                                <?php if ($h['is_active']): ?>
+                                                    <span class="status-pill active">Active</span>
+                                                <?php else: ?>
+                                                    <span class="status-pill inactive">Inactive</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <div class="row-actions">
                                                     <form method="POST" style="display:inline;">
                                                         <?= csrf_field() ?>
-                                                        <input type="hidden" name="doctor_id" value="<?= (int)$doc['user_id'] ?>">
-                                                        <input type="hidden" name="action" value="approve">
-                                                        <button type="submit" class="action-btn approve">Approve</button>
-                                                    </form>
-                                                    <form method="POST" style="display:inline;">
-                                                        <?= csrf_field() ?>
-                                                        <input type="hidden" name="doctor_id" value="<?= (int)$doc['user_id'] ?>">
-                                                        <input type="hidden" name="action" value="reject">
-                                                        <button type="submit" class="action-btn reject">Reject</button>
+                                                        <input type="hidden" name="hospital_id" value="<?= (int)$h['id'] ?>">
+                                                        <input type="hidden" name="action" value="toggle_status">
+                                                        <button type="submit" class="btn-toggle-status <?= $h['is_active'] ? 'deactivate' : 'activate' ?>">
+                                                            <?= $h['is_active'] ? 'Deactivate' : 'Activate' ?>
+                                                        </button>
                                                     </form>
                                                 </div>
                                             </td>
@@ -296,6 +332,69 @@ $pendingList = $db->query("
         </main>
     </div>
 
+    <!-- =======================================================
+         ADD HOSPITAL MODAL DIALOG
+         ======================================================= -->
+    <div class="modal-backdrop" id="hospitalModalBackdrop" onclick="closeHospitalModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <span class="panel-kicker">REGISTER FACILITY</span>
+                    <h2 class="modal-title">Add New Hospital</h2>
+                    <p class="modal-desc">Enter details to partner with NovaCare network</p>
+                </div>
+                <button type="button" class="modal-close" onclick="closeHospitalModal()" aria-label="Close modal">✕</button>
+            </div>
+
+            <form method="POST" action="hospitals.php" class="modal-form">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="add_hospital">
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="modal_name">Hospital Name <span class="required">*</span></label>
+                        <input type="text" id="modal_name" name="name" required placeholder="e.g. NovaCare General Hospital">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal_email">Official Email <span class="required">*</span></label>
+                        <input type="email" id="modal_email" name="email" required placeholder="e.g. info@novacare.org">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal_phone">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="modal_phone" name="phone" required placeholder="e.g. +977 9800000000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal_emergency">Emergency Helpline</label>
+                        <input type="tel" id="modal_emergency" name="emergency_phone" placeholder="e.g. +977 9800000001">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal_departments">Departments <small style="color:var(--text-muted);font-weight:400;">(comma-separated)</small></label>
+                        <input type="text" id="modal_departments" name="departments" placeholder="Cardiology, Pediatrics, ER, Neurology">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="modal_address">Hospital Address <span class="required">*</span></label>
+                        <input type="text" id="modal_address" name="address" required placeholder="e.g. Main Road, Biratnagar, Nepal">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="modal_desc">Facility Description</label>
+                        <textarea id="modal_desc" name="description" rows="3" placeholder="Brief description of the hospital facilities, bed capacity, and specialties..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeHospitalModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">Add Hospital</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function openSidebar() {
             document.querySelector(".adm-sidebar").classList.add("open");
@@ -305,6 +404,43 @@ $pendingList = $db->query("
         function closeSidebar() {
             document.querySelector(".adm-sidebar").classList.remove("open");
             document.getElementById("sidebarOverlay").classList.remove("open");
+        }
+
+        function openHospitalModal() {
+            const backdrop = document.getElementById("hospitalModalBackdrop");
+            backdrop.classList.add("open");
+            document.body.style.overflow = "hidden";
+            setTimeout(() => {
+                const nameInput = document.getElementById("modal_name");
+                if (nameInput) nameInput.focus();
+            }, 100);
+        }
+
+        function closeHospitalModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const backdrop = document.getElementById("hospitalModalBackdrop");
+            backdrop.classList.remove("open");
+            document.body.style.overflow = "";
+        }
+
+        // Close on ESC key
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") {
+                closeHospitalModal();
+            }
+        });
+
+        // Instant live filter in hospitals table
+        const searchInput = document.getElementById("hospitalSearchInput");
+        if (searchInput) {
+            searchInput.addEventListener("input", function() {
+                const term = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll("#hospitalsTable tbody tr.hospital-row");
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? "" : "none";
+                });
+            });
         }
     </script>
 </body>

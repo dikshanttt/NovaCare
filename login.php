@@ -3,6 +3,8 @@ require_once __DIR__ . '/auth/auth.php';
 require_once __DIR__ . '/database/db.php';
 require_once __DIR__ . '/include/function.php';
 
+$bookAppointmentUrl = 'patient/appointment.php';
+
 // If user is already logged in, redirect them to their respective dashboard
 if (is_logged_in()) {
     $role = current_role();
@@ -28,16 +30,35 @@ if ($flash) {
     }
 }
 
-$selectedRole = $_POST['role'] ?? ($_GET['role'] ?? 'patient');
-$identifier = trim($_POST['identifier'] ?? '');
-$redirectUrl = trim($_POST['redirect'] ?? ($_GET['redirect'] ?? ''));
+$requestedRole = $_POST['role'] ?? ($_GET['role'] ?? 'patient');
+$selectedRole = is_string($requestedRole) && in_array($requestedRole, ['patient', 'doctor', 'admin'], true)
+    ? $requestedRole
+    : 'patient';
+$identifierValue = $_POST['identifier'] ?? '';
+$identifier = is_string($identifierValue) ? trim($identifierValue) : '';
+$redirectValue = $_POST['redirect'] ?? ($_GET['redirect'] ?? '');
+$redirectUrl = is_string($redirectValue) ? trim($redirectValue) : '';
 
 // Handle Login Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $password = $_POST['password'] ?? '';
-    $selectedRole = in_array($_POST['role'] ?? '', ['patient', 'doctor', 'admin']) ? $_POST['role'] : 'patient';
+    csrf_verify();
 
-    if (empty($identifier) || empty($password)) {
+    $passwordValue = $_POST['password'] ?? '';
+    $password = is_string($passwordValue) ? $passwordValue : '';
+    $now = time();
+    $loginAttempts = $_SESSION['login_attempts'] ?? [];
+    if (!is_array($loginAttempts)) {
+        $loginAttempts = [];
+    }
+    $loginAttempts = array_values(array_filter(
+        $loginAttempts,
+        static fn ($attempt): bool => is_int($attempt) && $attempt > $now - 900
+    ));
+    $_SESSION['login_attempts'] = $loginAttempts;
+
+    if (count($loginAttempts) >= 5) {
+        $errorMessage = 'Too many failed sign-in attempts. Please wait 15 minutes and try again.';
+    } elseif (empty($identifier) || empty($password)) {
         $errorMessage = 'Please enter both your login identifier and password.';
     } else {
         try {
@@ -89,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errorMessage = 'Your account is not active. Please contact support.';
                 } else {
                     // Valid credentials and active status
+                    unset($_SESSION['login_attempts']);
                     login_user((int) $user['id'], $user['role'], (bool) $user['force_password_change']);
 
                     if ($user['role'] === 'doctor') {
@@ -96,14 +118,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } elseif ($user['role'] === 'admin') {
                         redirect('admin/dashboard.php');
                     } else {
-                        if (!empty($redirectUrl)) {
-                            redirect($redirectUrl);
+                        $safeRedirect = safe_internal_redirect(
+                            $redirectUrl,
+                            ['patient/appointment.php', 'patient/dashboard.php']
+                        );
+                        if ($safeRedirect !== null) {
+                            redirect($safeRedirect);
                         }
                         redirect('patient/dashboard.php');
                     }
                 }
             } else {
-                $errorMessage = 'Invalid email/ID or password. Please try again.';
+                $loginAttempts[] = $now;
+                $_SESSION['login_attempts'] = $loginAttempts;
+                $errorMessage = count($loginAttempts) >= 5
+                    ? 'Too many failed sign-in attempts. Please wait 15 minutes and try again.'
+                    : 'Invalid email/ID or password. Please try again.';
             }
 
         } catch (Throwable $e) {
@@ -203,6 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
 
+                <form method="POST" action="login.php" autocomplete="on">
+                    <?= csrf_field() ?>
                     <input type="hidden" name="role" id="roleInput" value="<?= htmlspecialchars($selectedRole, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirectUrl, ENT_QUOTES, 'UTF-8') ?>">
 
@@ -246,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <polyline points="22,6 12,13 2,6"/>
                                 </svg>
                             </span>
-                            <input type="text" id="identifier" name="identifier" class="form-input" 
+                            <input type="text" id="identifierInput" name="identifier" class="form-input"
                                    placeholder="you@example.com"
                                    value="<?= htmlspecialchars($identifier, ENT_QUOTES, 'UTF-8') ?>" 
                                    required autofocus>

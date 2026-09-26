@@ -1,24 +1,5 @@
 <?php
-require_once __DIR__ . '/../include/function.php';
-require_once __DIR__ . '/../database/db.php';
-
-/*
-|--------------------------------------------------------------------------
-| Start Session
-|--------------------------------------------------------------------------
-*/
-
-if (session_status() === PHP_SESSION_NONE) {
-    $isSecure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-
-    session_set_cookie_params([
-        'httponly' => true,
-        'secure'   => $isSecure,
-        'samesite' => 'Lax'
-    ]);
-
-    session_start();
-}
+require_once __DIR__ . '/../include/bootstrap.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -188,6 +169,7 @@ function login_user(
      * Prevent session fixation attacks.
      */
     session_regenerate_id(true);
+    unset($_SESSION['csrf_token'], $_SESSION['csrf_token_created_at']);
 
     $_SESSION['user_id'] = $userId;
     $_SESSION['role'] = $role;

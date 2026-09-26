@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     // Cleans and safely escapes user input
     function clean(string $value): string
@@ -46,6 +46,41 @@
         exit;
     }
 
+    /**
+     * Return an allowlisted local path for a post-login redirect.
+     */
+    function safe_internal_redirect(?string $destination, array $allowedPaths): ?string
+    {
+        if ($destination === null || $destination === '' || preg_match('/[\x00-\x20\x7f\\\\]/', $destination)) {
+            return null;
+        }
+
+        if (str_starts_with($destination, '//')) {
+            return null;
+        }
+
+        $parts = parse_url($destination);
+        if ($parts === false) {
+            return null;
+        }
+        foreach (['scheme', 'host', 'user', 'pass', 'query', 'fragment'] as $component) {
+            if (array_key_exists($component, $parts)) {
+                return null;
+            }
+        }
+
+        if (!isset($parts['path'])) {
+            return null;
+        }
+
+        $path = $parts['path'] ?? '';
+        if (str_starts_with($path, '/')) {
+            $path = substr($path, 1);
+        }
+
+        return in_array($path, $allowedPaths, true) ? $path : null;
+    }
+
     // Stores a temporary flash message in the session
     function set_flash(string $type, string $message): void
     {
@@ -65,8 +100,14 @@
     // Generates or returns the CSRF security token
         function csrf_token(): string
         {
-            if (empty($_SESSION['csrf_token'])) {
+            $tokenCreatedAt = (int) ($_SESSION['csrf_token_created_at'] ?? 0);
+            if (
+                empty($_SESSION['csrf_token']) ||
+                $tokenCreatedAt === 0 ||
+                time() - $tokenCreatedAt > 7200
+            ) {
                 $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                $_SESSION['csrf_token_created_at'] = time();
             }
             return $_SESSION['csrf_token'];
         }
@@ -74,16 +115,23 @@
         // Creates a hidden CSRF token field for forms
         function csrf_field(): string
         {
-            return '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+            return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
         }
 
         // Verifies the submitted CSRF token
         function csrf_verify(): void
         {
             $token = $_POST['csrf_token'] ?? '';
-            if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            $createdAt = (int) ($_SESSION['csrf_token_created_at'] ?? 0);
+            if (
+                !is_string($token) ||
+                !is_string($_SESSION['csrf_token'] ?? null) ||
+                $createdAt === 0 ||
+                time() - $createdAt > 7200 ||
+                !hash_equals($_SESSION['csrf_token'], $token)
+            ) {
                 http_response_code(403);
-                die('Invalid or expired form submission. Please go back and try again.');
+                exit('This form has expired or could not be verified. Please reload the page and try again.');
             }
         }
 
@@ -194,4 +242,3 @@
                     return $token;
                 }    
 
-                

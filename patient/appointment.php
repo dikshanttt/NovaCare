@@ -9,6 +9,8 @@ if (!is_logged_in() || current_role() !== 'patient') {
     redirect('login.php?redirect=patient/appointment.php&role=patient');
 }
 
+require_login(['patient']);
+
 $db = getDB();
 $userId = current_user_id();
 
@@ -23,6 +25,8 @@ $bookedToken = '';
 
 // Handle Appointment Booking Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+
     $doctorId = (int) ($_POST['doctor_id'] ?? 0);
     $appointmentDate = trim($_POST['appointment_date'] ?? '');
     $slotTime = trim($_POST['slot_time'] ?? '');
@@ -140,7 +144,10 @@ $verifiedDoctors = $doctorsStmt->fetchAll();
             <span style="color: #bbb;">|</span>
             <a href="dashboard.php" style="color: var(--cherry); font-weight: 600;">Dashboard</a>
             <span style="color: #bbb;">|</span>
-            <a href="../logout.php" style="color: var(--gray);">Sign out</a>
+            <form method="POST" action="../logout.php" style="display:inline; margin:0;">
+                <?= csrf_field() ?>
+                <button type="submit" style="color: var(--gray); background:none; border:0; padding:0; cursor:pointer;">Sign out</button>
+            </form>
         </div>
     </header>
 
@@ -199,6 +206,7 @@ $verifiedDoctors = $doctorsStmt->fetchAll();
                     <?php endif; ?>
 
                     <form method="POST" action="appointment.php">
+                        <?= csrf_field() ?>
                         <!-- Select Doctor -->
                         <div class="form-group">
                             <label for="doctor_id" class="form-label">Choose Specialist / Doctor *</label>

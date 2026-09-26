@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/auth.php';
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../include/function.php';
 require_once __DIR__ . '/../config/config.php';
 require_login(['admin']);
 
@@ -15,14 +15,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $scheduleId = (int)($_POST['schedule_id'] ?? 0);
 
     if ($scheduleId > 0 && in_array($action, ['approve', 'reject'], true)) {
-        $newStatus = $action === 'approve' ? 'approved' : 'rejected';
-
-        $stmt = $db->prepare("
-            UPDATE schedules
-            SET status = ?, reviewed_at = CURRENT_TIMESTAMP
-            WHERE id = ? AND status = 'pending_approval'
-        ");
-        $stmt->execute([$newStatus, $scheduleId]);
+        if ($action === 'approve') {
+            $stmt = $db->prepare("
+                UPDATE schedules
+                SET status = 'approved',
+                    reviewed_at = CURRENT_TIMESTAMP,
+                    approved_at = CURRENT_TIMESTAMP,
+                    approved_by_admin_id = ?
+                WHERE id = ? AND status = 'pending_approval'
+            ");
+            $stmt->execute([$_SESSION['user_id'] ?? null, $scheduleId]);
+        } else {
+            $stmt = $db->prepare("
+                UPDATE schedules
+                SET status = 'rejected',
+                    reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND status = 'pending_approval'
+            ");
+            $stmt->execute([$scheduleId]);
+        }
 
         set_flash(
             'success',
@@ -40,8 +51,8 @@ $pendingSched   = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status =
 $approvedToday  = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status = 'approved' AND DATE(reviewed_at) = CURRENT_DATE")->fetchColumn();
 $weekTotal      = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE requested_at >= CURRENT_DATE - INTERVAL '7 days'")->fetchColumn();
 $rejectedWeek   = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status = 'rejected' AND reviewed_at >= CURRENT_DATE - INTERVAL '7 days'")->fetchColumn();
-$pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctor_profiles WHERE verification_status = 'pending'")->fetchColumn();
-$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status = 'pending_hospital_approval'")->fetchColumn();
+$pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctors WHERE verification_status = 'pending'")->fetchColumn();
+$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status IN ('pending', 'pending_hospital_approval')")->fetchColumn();
 
 /* ---------- PENDING SCHEDULES ---------- */
 $pendingList = $db->query("
@@ -98,7 +109,7 @@ $pendingList = $db->query("
                     <span class="nav-icon">🏥</span>
                     <span>Manage Hospitals</span>
                 </a>
-                <a href="verify_doctors.php">
+                <a href="verify_doctor.php">
                     <span class="nav-icon">🩺</span>
                     <span>Verify &amp; Affiliations</span>
                     <?php if ($pendingDoctors > 0): ?>
@@ -129,10 +140,13 @@ $pendingList = $db->query("
                         <small>All systems operational</small>
                     </div>
                 </div>
-                <a class="signout-link" href="../logout.php">
-                    <span class="nav-icon">↩</span>
-                    Sign Out
-                </a>
+                <form method="POST" action="../logout.php" style="margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="signout-link" style="width:100%; border:0; background:transparent; cursor:pointer; text-align:left;">
+                        <span class="nav-icon">↩</span>
+                        Sign Out
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -233,22 +247,19 @@ $pendingList = $db->query("
                             <?php foreach ($pendingList as $s): ?>
                                 <?php
                                 $initials = strtoupper(substr($s['doctor_name'] ?? 'DR', 0, 2));
-                                $dayLabel = !empty($s['day_of_week'])
-                                    ? ucfirst($s['day_of_week'])
-                                    : (!empty($s['schedule_date']) ? date('l', strtotime($s['schedule_date'])) : '—');
+                                $dayLabel = !empty($s['day_of_week']) ? ucfirst($s['day_of_week']) : '—';
                                 $timeLabel = '';
                                 if (!empty($s['start_time']) && !empty($s['end_time'])) {
                                     $timeLabel = substr($s['start_time'], 0, 5) . ' – ' . substr($s['end_time'], 0, 5);
-                                } elseif (!empty($s['time_slot'])) {
-                                    $timeLabel = $s['time_slot'];
                                 } else {
                                     $timeLabel = '—';
                                 }
-                                $slotCount = (int)($s['max_slots'] ?? $s['slot_count'] ?? 0);
+                                $slotDuration = (int)($s['slot_duration_minutes'] ?? 15);
+                                $slotInfo = $slotDuration > 0 ? "{$slotDuration} mins" : '—';
                                 $submitted = !empty($s['requested_at'])
                                     ? date('M j', strtotime($s['requested_at']))
                                     : '—';
-                                $note = $s['notes'] ?? $s['description'] ?? '';
+                                $note = $s['change_reason'] ?? '';
                                 ?>
                                 <article class="schedule-card">
                                     <div class="schedule-card-top">
@@ -271,8 +282,8 @@ $pendingList = $db->query("
                                             <strong><?= htmlspecialchars($timeLabel) ?></strong>
                                         </div>
                                         <div class="detail-item">
-                                            <span class="detail-label">Slots</span>
-                                            <strong><?= $slotCount > 0 ? $slotCount . ' slots' : '—' ?></strong>
+                                            <span class="detail-label">Slot Duration</span>
+                                            <strong><?= htmlspecialchars($slotInfo) ?></strong>
                                         </div>
                                         <div class="detail-item">
                                             <span class="detail-label">Submitted</span>

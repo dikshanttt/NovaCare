@@ -98,13 +98,22 @@ function doctorAvatar(?string $path): string {
             <?php if ($isPatient): ?>
                 <a href="patient/dashboard.php" class="login">Dashboard</a>
                 <a href="patient/appointment.php" class="btn cherry-btn">Book Appointment</a>
-                <a href="logout.php" class="login" style="font-size: 13px; color: var(--gray);">Sign out</a>
+                <form method="POST" action="logout.php" style="display:inline; margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="login" style="font-size: 13px; color: var(--gray); background:none; border:0; padding:0; cursor:pointer;">Sign out</button>
+                </form>
             <?php elseif ($userRole === 'doctor'): ?>
                 <a href="doctor/dashboard.php" class="login">Doctor Dashboard</a>
-                <a href="logout.php" class="btn oat-btn">Sign out</a>
+                <form method="POST" action="logout.php" style="display:inline; margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn oat-btn" style="background:var(--oat); border:0; cursor:pointer;">Sign out</button>
+                </form>
             <?php elseif ($userRole === 'admin'): ?>
                 <a href="admin/dashboard.php" class="login">Admin Panel</a>
-                <a href="logout.php" class="btn oat-btn">Sign out</a>
+                <form method="POST" action="logout.php" style="display:inline; margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn oat-btn" style="background:var(--oat); border:0; cursor:pointer;">Sign out</button>
+                </form>
             <?php endif; ?>
         <?php else: ?>
             <a href="login.php" class="login">Sign In</a>

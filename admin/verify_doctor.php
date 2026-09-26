@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/auth.php';
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../include/function.php';
 require_once __DIR__ . '/../config/config.php';
 require_login(['admin']);
 
@@ -13,36 +13,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action   = $_POST['action'] ?? '';
     $doctorId = (int)($_POST['doctor_id'] ?? 0);
+    $adminId  = (int)($_SESSION['user_id'] ?? 0);
 
     if ($doctorId > 0 && in_array($action, ['approve', 'reject'], true)) {
-        $newStatus = $action === 'approve' ? 'verified' : 'rejected';
 
-        $stmt = $db->prepare("
-            UPDATE doctor_profiles
-            SET verification_status = ?, verified_at = CURRENT_TIMESTAMP
-            WHERE user_id = ? AND verification_status = 'pending'
-        ");
-        $stmt->execute([$newStatus, $doctorId]);
+        $db->beginTransaction();
+        try {
+            if ($action === 'approve') {
+                $stmt = $db->prepare("
+                    UPDATE doctors
+                    SET verification_status = 'verified',
+                        verified_at = CURRENT_TIMESTAMP,
+                        verified_by_admin_id = ?
+                    WHERE user_id = ? AND verification_status = 'pending'
+                ");
+                $stmt->execute([$adminId, $doctorId]);
 
-        if ($action === 'approve') {
-            $db->prepare("UPDATE users SET status = 'active' WHERE id = ?")->execute([$doctorId]);
+                $db->prepare("UPDATE users SET status = 'active' WHERE id = ?")->execute([$doctorId]);
+
+                set_flash('success', 'Doctor verified successfully.');
+            } else {
+                $reason = clean($_POST['rejection_reason'] ?? 'Application does not meet requirements.');
+
+                $stmt = $db->prepare("
+                    UPDATE doctors
+                    SET verification_status = 'rejected',
+                        rejection_reason = ?,
+                        verified_by_admin_id = ?
+                    WHERE user_id = ? AND verification_status = 'pending'
+                ");
+                $stmt->execute([$reason, $adminId, $doctorId]);
+
+                $db->prepare("UPDATE users SET status = 'rejected' WHERE id = ?")->execute([$doctorId]);
+
+                set_flash('success', 'Doctor application rejected.');
+            }
+            $db->commit();
+        } catch (Exception $e) {
+            $db->rollBack();
+            set_flash('error', 'An error occurred: ' . $e->getMessage());
         }
-
-        set_flash(
-            'success',
-            $action === 'approve'
-                ? 'Doctor verified successfully.'
-                : 'Doctor application rejected.'
-        );
     }
 
-    redirect('/admin/verify_doctors.php');
+    /* Handle affiliation approve/reject */
+    $affAction = $_POST['affiliation_action'] ?? '';
+    $affId     = (int)($_POST['affiliation_id'] ?? 0);
+
+    if ($affId > 0 && in_array($affAction, ['approve_affiliation', 'reject_affiliation'], true)) {
+        $newStatus = $affAction === 'approve_affiliation' ? 'active' : 'inactive';
+        $stmt = $db->prepare("UPDATE doctor_hospital SET status = ? WHERE id = ? AND status = 'pending'");
+        $stmt->execute([$newStatus, $affId]);
+        set_flash('success', $affAction === 'approve_affiliation'
+            ? 'Affiliation approved.'
+            : 'Affiliation request rejected.');
+    }
+
+    redirect('/admin/verify_doctor.php');
 }
 
 /* ---------- STATS ---------- */
-$pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctor_profiles WHERE verification_status = 'pending'")->fetchColumn();
+$pendingDoctors = (int)$db->query("SELECT COUNT(*) FROM doctors WHERE verification_status = 'pending'")->fetchColumn();
 $pendingSched   = (int)$db->query("SELECT COUNT(*) FROM schedules WHERE status = 'pending_approval'")->fetchColumn();
-$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status = 'pending_hospital_approval'")->fetchColumn();
+$pendingApps    = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE status IN ('pending','pending_hospital_approval')")->fetchColumn();
 $affiliationCount = (int)$db->query("
     SELECT COUNT(*) FROM doctor_hospital WHERE status = 'pending'
 ")->fetchColumn();
@@ -50,20 +82,42 @@ $affiliationCount = (int)$db->query("
 /* ---------- PENDING DOCTORS ---------- */
 $pendingList = $db->query("
     SELECT
-        dp.user_id,
-        dp.name,
-        dp.specialty,
-        dp.verification_status,
-        dp.created_at,
+        d.user_id,
+        d.name,
+        d.specialization,
+        d.qualification,
+        d.license_no,
+        d.experience_years,
+        d.phone,
+        d.verification_status,
         u.email,
+        u.created_at,
         h.name AS hospital_name,
         h.address AS hospital_address
-    FROM doctor_profiles dp
-    JOIN users u ON u.id = dp.user_id
-    LEFT JOIN doctor_hospital dh ON dh.doctor_id = dp.user_id AND dh.status IN ('pending', 'active')
+    FROM doctors d
+    JOIN users u ON u.id = d.user_id
+    LEFT JOIN doctor_hospital dh ON dh.doctor_id = d.user_id AND dh.status IN ('pending', 'active')
     LEFT JOIN hospitals h ON h.id = dh.hospital_id
-    WHERE dp.verification_status = 'pending'
-    ORDER BY dp.created_at ASC
+    WHERE d.verification_status = 'pending'
+    ORDER BY u.created_at ASC
+")->fetchAll();
+
+/* ---------- PENDING AFFILIATIONS ---------- */
+$pendingAffiliations = $db->query("
+    SELECT
+        dh.id AS affiliation_id,
+        d.name AS doctor_name,
+        d.specialization,
+        u.email AS doctor_email,
+        h.name AS hospital_name,
+        h.address AS hospital_address,
+        dh.created_at
+    FROM doctor_hospital dh
+    JOIN doctors d ON d.user_id = dh.doctor_id
+    JOIN users u ON u.id = dh.doctor_id
+    JOIN hospitals h ON h.id = dh.hospital_id
+    WHERE dh.status = 'pending'
+    ORDER BY dh.created_at ASC
 ")->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -108,7 +162,7 @@ $pendingList = $db->query("
                     <span class="nav-icon">🏥</span>
                     <span>Manage Hospitals</span>
                 </a>
-                <a class="active" href="verify_doctors.php">
+                <a class="active" href="verify_doctor.php">
                     <span class="nav-icon">🩺</span>
                     <span>Verify &amp; Affiliations</span>
                     <?php if ($pendingDoctors > 0): ?>
@@ -139,10 +193,13 @@ $pendingList = $db->query("
                         <small>All systems operational</small>
                     </div>
                 </div>
-                <a class="signout-link" href="../logout.php">
-                    <span class="nav-icon">↩</span>
-                    Sign Out
-                </a>
+                <form method="POST" action="../logout.php" style="margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="signout-link" style="width:100%; border:0; background:transparent; cursor:pointer; text-align:left;">
+                        <span class="nav-icon">↩</span>
+                        Sign Out
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -214,6 +271,7 @@ $pendingList = $db->query("
                     </div>
                 </section>
 
+                <!-- Pending Doctor Verification -->
                 <section class="panel verify-panel">
                     <div class="panel-head">
                         <div>
@@ -228,10 +286,10 @@ $pendingList = $db->query("
                             <thead>
                                 <tr>
                                     <th>Doctor</th>
-                                    <th>Specialty</th>
+                                    <th>Specialization</th>
+                                    <th>License / Qualification</th>
                                     <th>Hospital</th>
                                     <th>Submitted</th>
-                                    <th>Type</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -260,7 +318,11 @@ $pendingList = $db->query("
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td><?= htmlspecialchars($doc['specialty'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($doc['specialization'] ?? '—') ?></td>
+                                            <td>
+                                                <strong><?= htmlspecialchars($doc['license_no'] ?? '—') ?></strong>
+                                                <small class="muted-block"><?= htmlspecialchars($doc['qualification'] ?? '') ?> · <?= (int)$doc['experience_years'] ?> yrs</small>
+                                            </td>
                                             <td>
                                                 <strong><?= htmlspecialchars($doc['hospital_name'] ?? 'Not linked') ?></strong>
                                                 <?php if (!empty($doc['hospital_address'])): ?>
@@ -268,7 +330,6 @@ $pendingList = $db->query("
                                                 <?php endif; ?>
                                             </td>
                                             <td><span class="date-cell"><?= htmlspecialchars($submitted) ?></span></td>
-                                            <td><span class="type-tag new">New registration</span></td>
                                             <td>
                                                 <div class="row-actions">
                                                     <form method="POST" style="display:inline;">
@@ -277,10 +338,84 @@ $pendingList = $db->query("
                                                         <input type="hidden" name="action" value="approve">
                                                         <button type="submit" class="action-btn approve">Approve</button>
                                                     </form>
-                                                    <form method="POST" style="display:inline;">
+                                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to reject this doctor?');">
                                                         <?= csrf_field() ?>
                                                         <input type="hidden" name="doctor_id" value="<?= (int)$doc['user_id'] ?>">
                                                         <input type="hidden" name="action" value="reject">
+                                                        <button type="submit" class="action-btn reject">Reject</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Pending Affiliations -->
+                <section class="panel verify-panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-kicker">AFFILIATIONS</span>
+                            <h2>Pending Hospital Links</h2>
+                            <small>Doctors requesting to join a hospital</small>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="adm-table">
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Hospital</th>
+                                    <th>Requested</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($pendingAffiliations)): ?>
+                                    <tr>
+                                        <td colspan="4" style="text-align:center;padding:40px;">
+                                            No pending affiliation requests.
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($pendingAffiliations as $aff): ?>
+                                        <?php
+                                        $affInitials = strtoupper(substr($aff['doctor_name'] ?? 'DR', 0, 2));
+                                        $affDate = !empty($aff['created_at'])
+                                            ? date('M j', strtotime($aff['created_at']))
+                                            : '—';
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <div class="person-cell">
+                                                    <span class="mini-avatar doctor-av"><?= htmlspecialchars($affInitials) ?></span>
+                                                    <div>
+                                                        <strong><?= htmlspecialchars($aff['doctor_name']) ?></strong>
+                                                        <small><?= htmlspecialchars($aff['doctor_email']) ?></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <strong><?= htmlspecialchars($aff['hospital_name']) ?></strong>
+                                                <small class="muted-block"><?= htmlspecialchars($aff['hospital_address']) ?></small>
+                                            </td>
+                                            <td><span class="date-cell"><?= htmlspecialchars($affDate) ?></span></td>
+                                            <td>
+                                                <div class="row-actions">
+                                                    <form method="POST" style="display:inline;">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="affiliation_id" value="<?= (int)$aff['affiliation_id'] ?>">
+                                                        <input type="hidden" name="affiliation_action" value="approve_affiliation">
+                                                        <button type="submit" class="action-btn approve">Approve</button>
+                                                    </form>
+                                                    <form method="POST" style="display:inline;">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="affiliation_id" value="<?= (int)$aff['affiliation_id'] ?>">
+                                                        <input type="hidden" name="affiliation_action" value="reject_affiliation">
                                                         <button type="submit" class="action-btn reject">Reject</button>
                                                     </form>
                                                 </div>

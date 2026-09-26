@@ -12,6 +12,14 @@
 
 .verify-panel {
     box-shadow: 0 8px 25px rgba(15, 43, 34, 0.035);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.verify-panel + .verify-panel {
+    margin-top: 26px;
 }
 
 .panel-actions {

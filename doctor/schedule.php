@@ -23,6 +23,10 @@ $successMessage = ($flash && $flash['type'] === 'success') ? $flash['message'] :
 $errorMessage = ($flash && $flash['type'] === 'error') ? $flash['message'] : '';
 
 // Handle Schedule Actions: Delete or Add Slot
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
@@ -250,7 +254,10 @@ $totalSlots = count($schedules);
             <span style="color: #ccc;">|</span>
             <a href="dashboard.php" style="color: var(--cherry); font-weight: 600;">Dashboard</a>
             <span style="color: #ccc;">|</span>
-            <a href="../logout.php" style="color: var(--gray); font-size: 13.5px; font-weight: 500;">Sign out</a>
+            <form method="POST" action="../logout.php" style="display:inline; margin:0;">
+                <?= csrf_field() ?>
+                <button type="submit" style="color: var(--gray); font-size: 13.5px; font-weight: 500; background:none; border:0; padding:0; cursor:pointer;">Sign out</button>
+            </form>
         </div>
     </header>
 
@@ -330,6 +337,7 @@ $totalSlots = count($schedules);
                                         </td>
                                         <td>
                                             <form method="POST" action="schedule.php" onsubmit="return confirm('Remove this consultation slot?');" style="margin: 0;">
+                                                <?= csrf_field() ?>
                                                 <input type="hidden" name="action" value="delete_schedule">
                                                 <input type="hidden" name="schedule_id" value="<?= (int)$s['id'] ?>">
                                                 <button type="submit" class="btn-del">Delete</button>
@@ -354,6 +362,7 @@ $totalSlots = count($schedules);
                 <h2>Add Consultation Hours</h2>
 
                 <form method="POST" action="schedule.php">
+                    <?= csrf_field() ?>
                     <input type="hidden" name="action" value="add_schedule">
 
                     <!-- Hospital -->

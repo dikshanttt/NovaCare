@@ -28,6 +28,10 @@ $successMessage = ($flash && $flash['type'] === 'success') ? $flash['message'] :
 $errorMessage = ($flash && $flash['type'] === 'error') ? $flash['message'] : '';
 
 // Handle Appointment Cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_appointment') {
     $appointmentId = (int) ($_POST['appointment_id'] ?? 0);
 
@@ -249,7 +253,10 @@ foreach ($appointments as $app) {
             <span style="color: #ccc;">|</span>
             <a href="appointment.php" class="btn-nav-book">Book Appointment</a>
             <span style="color: #ccc;">|</span>
-            <a href="../logout.php" style="color: var(--gray); font-size: 13.5px; font-weight: 500;">Sign out</a>
+            <form method="POST" action="../logout.php" style="display:inline; margin:0;">
+                <?= csrf_field() ?>
+                <button type="submit" style="color: var(--gray); font-size: 13.5px; font-weight: 500; background:none; border:0; padding:0; cursor:pointer;">Sign out</button>
+            </form>
         </div>
     </header>
 
@@ -355,6 +362,7 @@ foreach ($appointments as $app) {
                                         <td>
                                             <?php if (in_array($app['status'], ['pending', 'confirmed'])): ?>
                                                 <form method="POST" action="dashboard.php" onsubmit="return confirm('Are you sure you want to cancel this appointment?');" style="margin: 0;">
+                                                    <?= csrf_field() ?>
                                                     <input type="hidden" name="action" value="cancel_appointment">
                                                     <input type="hidden" name="appointment_id" value="<?= (int)$app['id'] ?>">
                                                     <button type="submit" class="btn-cancel">Cancel</button>
