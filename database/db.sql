@@ -203,30 +203,25 @@ CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (status);
 -- SEED DATA
 -- ============================================================
 
--- 1. Default Admin User (admin@example.com / Password123!)
+-- 1. Default Admin User (admin@novacare.com / novacare_admin)
 INSERT INTO users (id, email, password_hash, role, status)
 VALUES (
     1,
-    'admin@example.com',
-    '$2y$12$EdJecX7BBhbwggWDimla8OWtYBeJbNRzNYthzFnOUfTZg4BmBw6DS',
+    'admin@novacare.com',
+    '$2y$12$TLSRHjienqs27jAtOmrRhOj5zKSviHMffNeNhI7gDUNets4Ba6Wr6',
     'admin',
     'active'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    role = EXCLUDED.role,
+    status = EXCLUDED.status;
 
 INSERT INTO admins (user_id, name)
 VALUES (1, 'NovaCare System Admin')
 ON CONFLICT (user_id) DO NOTHING;
 
--- 2. Partner Hospitals Seed
-INSERT INTO hospitals (id, name, address, phone, email, emergency_phone, departments, description, is_active)
-VALUES 
-    (1, 'Central Care Hospital', '104 Medical Plaza, Downtown', '+1 800 555 0101', 'info@centralcare.org', '+1 800 555 9991', 'Cardiology, Pediatrics, Emergency, Radiology', 'Leading multidisciplinary hospital providing 24/7 acute and specialized care.', TRUE),
-    (2, 'Saint Luke Specialty Center', '720 Pine Street, Metro District', '+1 800 555 0102', 'contact@saintluke.org', '+1 800 555 9992', 'Orthopedics, Neurology, Physical Therapy', 'State-of-the-art facility focused on musculoskeletal and neurological rehabilitation.', TRUE),
-    (3, 'Mercy Women & Children Hospital', '55 Orchard Blvd, Westside', '+1 800 555 0103', 'care@mercywc.org', '+1 800 555 9993', 'Pediatrics, Gynecology, Obstetrics', 'Dedicated care for mothers, infants, and growing families with top neonatology specialists.', TRUE),
-    (4, 'Summit Family Health Center', '330 Ridgeview Way, North Hills', '+1 800 555 0104', 'wellness@summithealth.org', '+1 800 555 9994', 'Primary Care, Internal Medicine, Dermatology', 'Community-centered clinic offering comprehensive routine and preventative health services.', TRUE)
-ON CONFLICT (id) DO NOTHING;
-
 -- Sync sequences for serial primary keys
 SELECT setval('users_id_seq', (SELECT GREATEST(MAX(id), 1) FROM users));
-SELECT setval('hospitals_id_seq', (SELECT GREATEST(MAX(id), 1) FROM hospitals));
+SELECT setval('hospitals_id_seq', 1, false);
