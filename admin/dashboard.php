@@ -120,6 +120,10 @@ $flash = get_flash();
                         <small>All systems operational</small>
                     </div>
                 </div>
+                <a href="../change-password.php" class="signout-link" style="text-decoration:none; display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span class="nav-icon">🔒</span>
+                    Change Password
+                </a>
                 <form method="POST" action="../logout.php" style="margin:0;">
                     <?= csrf_field() ?>
                     <button type="submit" class="signout-link" style="width:100%; border:0; background:transparent; cursor:pointer; text-align:left;">

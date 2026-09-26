@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(10) NOT NULL CHECK (role IN ('patient', 'doctor', 'admin')),
     status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected')),
-    force_password_change BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -205,14 +204,13 @@ CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (status);
 -- ============================================================
 
 -- 1. Default Admin User (admin@example.com / Password123!)
-INSERT INTO users (id, email, password_hash, role, status, force_password_change)
+INSERT INTO users (id, email, password_hash, role, status)
 VALUES (
     1,
     'admin@example.com',
     '$2y$12$EdJecX7BBhbwggWDimla8OWtYBeJbNRzNYthzFnOUfTZg4BmBw6DS',
     'admin',
-    'active',
-    FALSE
+    'active'
 )
 ON CONFLICT (id) DO NOTHING;
 

@@ -11,7 +11,7 @@
     {
         $scriptPath = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/');
         $scriptBase = dirname($scriptPath);
-        $nestedDirectories = ['/admin', '/doctor', '/patient', '/register'];
+        $nestedDirectories = ['/admin', '/doctor', '/patient', '/register', '/registration'];
 
         foreach ($nestedDirectories as $directory) {
             if (str_ends_with($scriptBase, $directory)) {
@@ -142,7 +142,7 @@
         {
             do {
                 $candidate = 'DOC-' . random_int(1000, 9999);
-                $stmt = $db->prepare('SELECT 1 FROM users WHERE doctor_login_id = ?');
+                $stmt = $db->prepare('SELECT 1 FROM doctors WHERE doctor_login_id = ?');
                 $stmt->execute([$candidate]);
             } while ($stmt->fetch());
 
@@ -178,9 +178,8 @@
                 }
 
                 // Check the real mime type server-side; never trust the client extension.
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    $mime = finfo_file($finfo, $file['tmp_name']);
-                    finfo_close($finfo);
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mime = $finfo->file($file['tmp_name']);
 
                     if (!isset($allowedTypes[$mime])) {
                         throw new Exception('Only JPG, PNG, or WEBP images are allowed.');
