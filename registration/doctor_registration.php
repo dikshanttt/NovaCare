@@ -249,12 +249,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </svg>
                                 </span>
                                 <input type="text" id="name" name="name" class="form-input"
-                                    placeholder="e.g. Dr. Jiwan Niroula"
+                                    placeholder="e.g. Dr. Jivan Niroula"
                                     value="<?= htmlspecialchars($formData['name'], ENT_QUOTES, 'UTF-8') ?>" required>
                             </div>
                         </div>
 
-                        <!-- Email & Phone Row -->
+                        <!-- Email & Phone Row -->.
                         <div class="form-row-2">
                             <div class="form-group">
                                 <label for="email" class="form-label">Email Address *</label>

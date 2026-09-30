@@ -376,7 +376,7 @@ $totalSlots = count($schedules);
                         <div class="form-group">
                             <label for="max_patients_per_slot" class="form-label">Max Patients/Slot</label>
                             <div class="input-wrap">
-                                <input type="number" id="max_patients_per_slot" name="max_patients_per_slot" class="form-input no-icon" value="1" min="1" max="5" required>
+                                <input type="number" id="max_patients_per_slot" name="max_patients_per_slot" class="form-input no-icon" value="1" min="1" max="20" required>
                             </div>
                         </div>
                     </div>

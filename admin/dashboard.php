@@ -306,11 +306,11 @@ $flash = get_flash();
 
                                                 <td>
                                                     <strong>
-                                                        <?= htmlspecialchars($appointment['doctor_name']) ?>
+                                                        <?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?>
                                                     </strong>
 
                                                     <small class="muted-block">
-                                                        <?= htmlspecialchars($appointment['hospital_name']) ?>
+                                                        <?= htmlspecialchars($appointment['hospital_name'] ?? 'N/A') ?>
                                                     </small>
                                                 </td>
 

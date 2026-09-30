@@ -43,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash('error', 'Please fill in all required fields (Name, Address, Phone, Email).');
         }
     }
-
     redirect('/admin/hospitals.php');
 }
 
