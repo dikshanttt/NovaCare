@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </div>
 
-                        <!-- Email & Phone Row -->.
+                        <!-- Email & Phone Row -->
                         <div class="form-row-2">
                             <div class="form-group">
                                 <label for="email" class="form-label">Email Address *</label>

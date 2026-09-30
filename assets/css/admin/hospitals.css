@@ -12,6 +12,20 @@
     overflow: hidden;
 }
 
+.edit-hospital-form {
+    padding: 24px;
+}
+
+.hospital-edit-error {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: .85rem;
+}
+
 .panel-head {
     display: flex;
     align-items: center;
@@ -334,6 +348,32 @@
     background: #f8fafc;
     border-color: #94a3b8;
     color: #1e293b;
+}
+
+.row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.btn-edit:hover {
+    border-color: var(--primary, #0b6e4f);
+    color: var(--primary, #0b6e4f);
 }
 
 .btn-submit {

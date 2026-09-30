@@ -42,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             set_flash('error', 'Please fill in all required fields (Name, Address, Phone, Email).');
         }
+
     }
     redirect('/admin/hospitals.php');
 }
@@ -318,6 +319,7 @@ $hospitals = $db->query("
                                                             <?= $h['is_active'] ? 'Deactivate' : 'Activate' ?>
                                                         </button>
                                                     </form>
+                                                    <a class="btn-edit" href="edit_hospital.php?hospital_id=<?= (int)$h['id'] ?>">Edit</a>
                                                 </div>
                                             </td>
                                         </tr>

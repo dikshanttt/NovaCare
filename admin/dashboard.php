@@ -43,8 +43,10 @@ $recentAppsPreview = $db->query("
     SELECT a.*, p.name AS patient_name, dp.name AS doctor_name, h.name AS hospital_name
     FROM appointments a
     JOIN patient_profiles p ON p.user_id = a.patient_id
-    LEFT JOIN doctor_profiles dp ON dp.user_id = a.doctor_id
-    LEFT JOIN hospitals h ON h.id = a.hospital_id
+    LEFT JOIN schedules s ON s.id = a.schedule_id
+    LEFT JOIN doctor_hospital dh ON dh.id = s.doctor_hospital_id
+    LEFT JOIN doctor_profiles dp ON dp.user_id = COALESCE(a.doctor_id, s.doctor_id, dh.doctor_id)
+    LEFT JOIN hospitals h ON h.id = COALESCE(a.hospital_id, s.hospital_id, dh.hospital_id)
     ORDER BY a.created_at DESC
     LIMIT 5
 ")->fetchAll();
@@ -298,7 +300,7 @@ $flash = get_flash();
                                                             </strong>
 
                                                             <small>
-                                                                <?= htmlspecialchars($appointment['token'] ?? 'N/A') ?>
+                                                                <?= htmlspecialchars($appointment['appointment_token'] ?? 'N/A') ?>
                                                             </small>
                                                         </div>
                                                     </div>

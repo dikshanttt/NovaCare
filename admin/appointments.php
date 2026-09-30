@@ -22,8 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FROM appointments a
             JOIN patients p ON p.user_id = a.patient_id
             JOIN users u_pat ON u_pat.id = a.patient_id
-            LEFT JOIN doctors d ON d.user_id = a.doctor_id
-            LEFT JOIN hospitals h ON h.id = a.hospital_id
+            LEFT JOIN schedules s ON s.id = a.schedule_id
+            LEFT JOIN doctor_hospital dh ON dh.id = s.doctor_hospital_id
+            LEFT JOIN doctors d ON d.user_id = COALESCE(a.doctor_id, s.doctor_id, dh.doctor_id)
+            LEFT JOIN hospitals h ON h.id = COALESCE(a.hospital_id, s.hospital_id, dh.hospital_id)
             WHERE a.id = ?
         ");
         $stmtApp->execute([$appId]);
@@ -90,8 +92,10 @@ $appointments = $db->query("
            h.name AS hospital_name, h.email AS hospital_email
     FROM appointments a
     JOIN patients p ON p.user_id = a.patient_id
-    LEFT JOIN doctors d ON d.user_id = a.doctor_id
-    LEFT JOIN hospitals h ON h.id = a.hospital_id
+    LEFT JOIN schedules s ON s.id = a.schedule_id
+    LEFT JOIN doctor_hospital dh ON dh.id = s.doctor_hospital_id
+    LEFT JOIN doctors d ON d.user_id = COALESCE(a.doctor_id, s.doctor_id, dh.doctor_id)
+    LEFT JOIN hospitals h ON h.id = COALESCE(a.hospital_id, s.hospital_id, dh.hospital_id)
     ORDER BY a.appointment_date DESC, a.slot_time DESC
 ")->fetchAll();
 
